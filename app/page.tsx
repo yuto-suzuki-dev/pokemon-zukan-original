@@ -1,4 +1,10 @@
-export default function Home() {
+export default async function Home() {
+
+  const responce = await fetch("https://pokeapi.co/api/v2/pokemon?limit=30");
+
+  const data = await responce.json();
+  console.log(data);
+  
   const pokemons = [
     { number: 1, name: "ピカチュウ", type: "でんき" },
     { number: 2, name: "ヒトカゲ", type: "ほのお" },
