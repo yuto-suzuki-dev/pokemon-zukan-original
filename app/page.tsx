@@ -1,16 +1,18 @@
+interface ApiPokemon {
+  name: string;
+  url: string;
+}
+
 export default async function Home() {
 
   const responce = await fetch("https://pokeapi.co/api/v2/pokemon?limit=30");
 
   const data = await responce.json();
   console.log(data);
-  
-  const pokemons = [
-    { number: 1, name: "ピカチュウ", type: "でんき" },
-    { number: 2, name: "ヒトカゲ", type: "ほのお" },
-    { number: 3, name: "ゼニガメ", type: "みず" },
-    { number: 4, name: "フシギダネ", type: "くさ" }
-  ];
+  const apiPokemons: ApiPokemon[] = data.results;
+
+  const pokemons = apiPokemons;
+  console.log(apiPokemons[0]);
 
   return (
     <>
@@ -19,14 +21,14 @@ export default async function Home() {
 
       <div className="grid grid-cols-3 gap-6 w-full max-w-[1200px] mx-auto">
         {pokemons.map((pokemon) => (
-          <div key={pokemon.number} className="border p-4 rounded hover:bg-gray-100 cursor-pointer">
+          <div key={pokemon.url} className="border p-4 rounded hover:bg-gray-100 cursor-pointer">
 
             <div className="h-80  mb-5 flex justify-center items-center">
               <img src="/img/pa-ko.JPG"  alt="ポケモンの画像エリア" className="max-w-full max-h-full"/>
             </div>
             
             <div className="text-center">
-              #{pokemon.number}
+              #{pokemon.url}
             </div>
             
             <div className="font-bold text-center">
@@ -34,7 +36,7 @@ export default async function Home() {
             </div>
             
             <div className="text-sm border rounded py-2 w-20 text-center mx-auto mt-2 mb-2">
-              {pokemon.type}
+              未取得
             </div>
 
           </div>
