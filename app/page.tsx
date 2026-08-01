@@ -34,7 +34,7 @@ export default async function Home() {
   const pokemonUrl = apiPokemons.map((pokemon) => {
     return pokemon.url;
   })
-  // console.log(pokemonUrl); 
+  //console.log(pokemonUrl); 
 
 
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
@@ -44,10 +44,14 @@ export default async function Home() {
   const pokemonsDetails = pokemonUrl.map(async(url) => {
     const detailPokemonData = await fetch(url);
     const pokemonDetail = await detailPokemonData.json();
-   // console.log("ポケモン1匹あたりの詳細データは：",  pokemonDetail);
+    console.log("ポケモン1匹あたりの詳細データは：",  pokemonDetail);
     return pokemonDetail;
   });
 
+
+  //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
+  // ポケモンのタイプについて
+  //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
   const pokemonDetailsResults = await Promise.all(pokemonsDetails);
   // console.log("ポケモンの30匹分の詳細データから画像URLを取得、1匹目の画像のURLは", pokemonDetailsResults[0].sprites.other["official-artwork"].front_default);
   //console.log("1匹目の詳細データははこれ", pokemonDetailsResults[0],"だよ");
@@ -57,12 +61,40 @@ export default async function Home() {
     return pokemonFirstTypeName;
   });
   //console.log("ポケモンのタイプはこれ",pokemonFirstTypes,"です");
+ //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
+  //ポケモンを日本語名で取得
+  //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
+  //console.log("ポケモンの日本語名がある詳細データは",pokemonDetailsResults[0].species.url,"です");
+  const pokemonSpeciesUrls = pokemonDetailsResults.map((pokemonSpeciesUrlData) => {
+    const pokemonSpeciesUrl = pokemonSpeciesUrlData.species.url;
+    return pokemonSpeciesUrl;
+  });
+  //console.log("ポケモンのSpeciesのURLは",pokemonSpeciesUrls);
+  const responcePokemonSpeciesUrls = pokemonSpeciesUrls.map(async(speciesUrl) => {
+    const pokemonSpeciesUrl = await fetch(speciesUrl);
+    const pokemonSpeciesData = await pokemonSpeciesUrl.json();
+    //console.log("ポケモンのSpeciesのデータは",pokemonSpeciesData);
+    return pokemonSpeciesData; 
+  });
+   const pokemonSpeciesDataResults = await Promise.all(responcePokemonSpeciesUrls);
+  //console.log("speciesの詳細データは",pokemonSpeciesDataResults);
+  const pokemonJaNames =  pokemonSpeciesDataResults.map((pokemonJaName) => {
+    const pokemonJaNameData = pokemonJaName.names.find(( nameData: { language: { name: string }; name: string }) => {
+      return nameData.language.name === "ja";
+      });
+    return pokemonJaNameData.name;
+  });
+  console.log("ポケモンのJaNameは",pokemonJaNames);
 
+  //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
+  //ポケモンの画像のデータ
+  //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
   const pokemonImages = pokemonDetailsResults.map((pokemonImageData) => {
     const pokemonImage = pokemonImageData.sprites.other["official-artwork"].front_default;
     //console.log("ポケモンの画像データは", pokemonImage);
     return pokemonImage;
   }
+  
 
 ) 
 
@@ -114,7 +146,7 @@ export default async function Home() {
             
             {/* ポケモンの名前 */}
             <div className="font-bold text-center">
-              {pokemon.name}
+              {pokemonJaNames[index]}
             </div>
 
             {/* ポケモンのタイプ１ */}
