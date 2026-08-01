@@ -34,7 +34,7 @@ export default async function Home() {
   const pokemonUrl = apiPokemons.map((pokemon) => {
     return pokemon.url;
   })
-  // console.log(pokemonUrl); //開発時、中身確認用
+  // console.log(pokemonUrl); 
 
 
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
@@ -44,16 +44,23 @@ export default async function Home() {
   const pokemonsDetails = pokemonUrl.map(async(url) => {
     const detailPokemonData = await fetch(url);
     const pokemonDetail = await detailPokemonData.json();
-    console.log("ポケモン1匹あたりの詳細データは：",  pokemonDetail);
+   // console.log("ポケモン1匹あたりの詳細データは：",  pokemonDetail);
     return pokemonDetail;
   });
 
   const pokemonDetailsResults = await Promise.all(pokemonsDetails);
   // console.log("ポケモンの30匹分の詳細データから画像URLを取得、1匹目の画像のURLは", pokemonDetailsResults[0].sprites.other["official-artwork"].front_default);
+  //console.log("1匹目の詳細データははこれ", pokemonDetailsResults[0],"だよ");
+  //console.log("1匹目のポケモンのタイプのひとつめは", pokemonDetailsResults[0].types[0].type.name,"です");
+  const pokemonFirstTypes = pokemonDetailsResults.map((pokemonFirstTypesName) => {
+    const pokemonFirstTypeName = pokemonFirstTypesName.types[0].type.name;
+    return pokemonFirstTypeName;
+  });
+  //console.log("ポケモンのタイプはこれ",pokemonFirstTypes,"です");
 
   const pokemonImages = pokemonDetailsResults.map((pokemonImageData) => {
     const pokemonImage = pokemonImageData.sprites.other["official-artwork"].front_default;
-    console.log("ポケモンの画像データは", pokemonImage);
+    //console.log("ポケモンの画像データは", pokemonImage);
     return pokemonImage;
   }
 
@@ -108,6 +115,11 @@ export default async function Home() {
             {/* ポケモンの名前 */}
             <div className="font-bold text-center">
               {pokemon.name}
+            </div>
+
+            {/* ポケモンのタイプ１ */}
+            <div className="text-center">
+              {pokemonFirstTypes[index]}
             </div>
             
             {/* ポケモンの説明文 */}
