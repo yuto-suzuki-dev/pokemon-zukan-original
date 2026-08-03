@@ -122,7 +122,11 @@ export default async function Home() {
       {/* Main部分 */}
 
       {/* 検索ボタン */}
-      <button className="block py-2 w-20 border mb-5 bg-gray-50 mx-auto hover:bg-gray-100 cursor-pointer">検索する</button>
+      <Link href="/search">
+        <button className="block py-2 w-20 border mb-5 bg-gray-50 mx-auto hover:bg-gray-100 cursor-pointer">
+          検索する
+        </button>
+      </Link>
 
       {/* ポケモンのカード表示するエリア全体 */}
       <div className="grid grid-cols-3 gap-6 w-full max-w-[1200px] mx-auto">
