@@ -103,6 +103,29 @@ export default async function Home() {
     return pokemonJaNameData.name;
   });
   //console.log("ポケモンのJaNameは",pokemonJaNames);
+  //##########################################################
+  // ポケモンの説明文を取得
+  //###########################################################
+  const pokemonDescriptions = pokemonSpeciesDataResults.map((pokemonDescriptionData) => {
+
+    const pokemonDescription = pokemonDescriptionData.flavor_text_entries.find(
+      (flavorTextData: {
+        language: { name: string };
+        flavor_text: string;
+      }) => {
+        return flavorTextData.language.name === "ja";
+      }
+    );
+
+    return pokemonDescription.flavor_text
+      .replace(/\n/g, " ")
+      .replace(/\f/g, " ");
+  });
+
+  // console.log("ポケモンの説明文", pokemonDescriptions);
+
+
+
 
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
   //ポケモンの画像のデータ
@@ -180,7 +203,7 @@ export default async function Home() {
 
       {/* ポケモンの説明文 */}
       <div className="text-sm border rounded py-2 w-20 text-center mx-auto mt-2 mb-2">
-        未取得
+        {pokemonDescriptions[index]}
       </div>
 
     </div>
