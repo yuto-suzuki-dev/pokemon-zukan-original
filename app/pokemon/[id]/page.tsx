@@ -16,6 +16,35 @@ export default async function PokemonDetailPage({ params }: DetailPageProps) {
   // ポケモンの画像を取得
   const pokemonImage = pokemonDetail.sprites.other["official-artwork"].front_default;
 
+// ポケモンのタイプについて
+const pokemonTypeUrls = pokemonDetail.types.map(
+  (pokemonTypeData: { type: { name: string; url: string } }) => {
+    return pokemonTypeData.type.url;
+  }
+);
+
+const responcePokemonTypes = pokemonTypeUrls.map(async (pokemonTypeUrl: string) => {
+  const responcePokemonType = await fetch(pokemonTypeUrl);
+  return await responcePokemonType.json();
+});
+
+const pokemonTypesData = await Promise.all(responcePokemonTypes);
+
+// 日本語タイプを取得
+const pokemonJaTypes = pokemonTypesData.map((pokemonTypeData) => {
+  const pokemonJaType = pokemonTypeData.names.find(
+    (typeData: { language: { name: string }; name: string }) => {
+      return typeData.language.name === "ja";
+    }
+  );
+
+  return pokemonJaType.name;
+});
+
+// 開発時、中身確認用
+// console.log("ポケモンのタイプは", pokemonJaTypes);
+
+
   // 日本語名取得用のURL
   const pokemonSpeciesUrl = pokemonDetail.species.url;
 
@@ -50,6 +79,8 @@ export default async function PokemonDetailPage({ params }: DetailPageProps) {
       <p>図鑑番号：{id}</p>
 
       <p>ポケモンの名前：{pokemonJaName.name}</p>
+
+      <p>タイプ：{pokemonJaTypes.join("・")}</p>
 
     </>
   );

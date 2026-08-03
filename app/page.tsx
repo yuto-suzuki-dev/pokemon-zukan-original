@@ -15,8 +15,8 @@ export default async function Home() {
   //pokeAPI（一般に公開されているポケモンの膨大なデータの元）に接続(fetch)して30件ずつ取得。取得したデータをdataに格納 
   //取得した30匹分のポケモンのデータ（nameと詳細データへのアクセスさきのurl）はapiPokemonsに入れる。
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
-  const responce = await fetch("https://pokeapi.co/api/v2/pokemon?limit=30"); //pokeAPIからポケモンのデータを30件ずつ取得する
-  const data = await responce.json(); //取得したデータをjavascriptで使えるように変換しdataに入れる
+  const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=30"); //pokeAPIからポケモンのデータを30件ずつ取得する
+  const data = await response.json(); //取得したデータをjavascriptで使えるように変換しdataに入れる
   // console.log("dataは" , data); //開発時、中身確認用
   const apiPokemons: apiPokemon[] = data.results; //// dataのresultsから30匹分の名前と詳細URLを取り出し、apiPokemonsに入れる
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
@@ -88,13 +88,13 @@ export default async function Home() {
     return pokemonSpeciesUrl;
   });
   //console.log("ポケモンのSpeciesのURLは",pokemonSpeciesUrls);
-  const responcePokemonSpeciesUrls = pokemonSpeciesUrls.map(async (speciesUrl) => {
+  const responsePokemonSpeciesUrls = pokemonSpeciesUrls.map(async (speciesUrl) => {
     const pokemonSpeciesUrl = await fetch(speciesUrl);
     const pokemonSpeciesData = await pokemonSpeciesUrl.json();
     //console.log("ポケモンのSpeciesのデータは",pokemonSpeciesData);
     return pokemonSpeciesData;
   });
-  const pokemonSpeciesDataResults = await Promise.all(responcePokemonSpeciesUrls);
+  const pokemonSpeciesDataResults = await Promise.all(responsePokemonSpeciesUrls);
   //console.log("speciesの詳細データは",pokemonSpeciesDataResults);
   const pokemonJaNames = pokemonSpeciesDataResults.map((pokemonJaName) => {
     const pokemonJaNameData = pokemonJaName.names.find((nameData: { language: { name: string }; name: string }) => {
