@@ -60,6 +60,37 @@ const pokemonStatus = pokemonDetail.stats.map(
 // 開発時、中身確認用
 // console.log("ポケモンのステータスは", pokemonStatus);
 
+// ポケモンの特性を取得
+const pokemonAbilities = pokemonDetail.abilities.map(
+  (pokemonAbilityData: {
+    ability: { name: string; url: string };
+  }) => {
+    return pokemonAbilityData.ability.url;
+  }
+);
+
+const responcePokemonAbilities = pokemonAbilities.map(async (pokemonAbilityUrl: string) => {
+  const responcePokemonAbility = await fetch(pokemonAbilityUrl);
+  return await responcePokemonAbility.json();
+});
+
+const pokemonAbilitiesData = await Promise.all(responcePokemonAbilities);
+
+// 日本語の特性名を取得
+const pokemonJaAbilities = pokemonAbilitiesData.map((pokemonAbilityData) => {
+  const pokemonJaAbility = pokemonAbilityData.names.find(
+    (abilityData: { language: { name: string }; name: string }) => {
+      return abilityData.language.name === "ja";
+    }
+  );
+
+  return pokemonJaAbility.name;
+});
+
+// 開発時、中身確認用
+// console.log("ポケモンの特性は", pokemonJaAbilities);
+
+
 
   // 日本語名取得用のURL
   const pokemonSpeciesUrl = pokemonDetail.species.url;
@@ -106,6 +137,8 @@ const pokemonStatus = pokemonDetail.stats.map(
         <p>とくぼう：{pokemonStatus[4].statusValue}</p>
         <p>すばやさ：{pokemonStatus[5].statusValue}</p>
       </div>
+      
+      <p>特性：{pokemonJaAbilities.join("・")}</p>
 
     </>
   );
