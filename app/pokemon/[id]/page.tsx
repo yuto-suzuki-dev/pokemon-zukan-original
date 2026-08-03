@@ -44,6 +44,22 @@ const pokemonJaTypes = pokemonTypesData.map((pokemonTypeData) => {
 // 開発時、中身確認用
 // console.log("ポケモンのタイプは", pokemonJaTypes);
 
+// ポケモンのステータスを取得
+const pokemonStatus = pokemonDetail.stats.map(
+  (pokemonStatusData: {
+    base_stat: number;
+    stat: { name: string };
+  }) => {
+    return {
+      statusName: pokemonStatusData.stat.name,
+      statusValue: pokemonStatusData.base_stat,
+    };
+  }
+);
+
+// 開発時、中身確認用
+// console.log("ポケモンのステータスは", pokemonStatus);
+
 
   // 日本語名取得用のURL
   const pokemonSpeciesUrl = pokemonDetail.species.url;
@@ -81,6 +97,15 @@ const pokemonJaTypes = pokemonTypesData.map((pokemonTypeData) => {
       <p>ポケモンの名前：{pokemonJaName.name}</p>
 
       <p>タイプ：{pokemonJaTypes.join("・")}</p>
+
+      <div className="mt-5">
+        <p>HP：{pokemonStatus[0].statusValue}</p>
+        <p>こうげき：{pokemonStatus[1].statusValue}</p>
+        <p>ぼうぎょ：{pokemonStatus[2].statusValue}</p>
+        <p>とくこう：{pokemonStatus[3].statusValue}</p>
+        <p>とくぼう：{pokemonStatus[4].statusValue}</p>
+        <p>すばやさ：{pokemonStatus[5].statusValue}</p>
+      </div>
 
     </>
   );
