@@ -99,6 +99,56 @@ const pokemonJaAbilities = pokemonAbilitiesData.map((pokemonAbilityData) => {
   const responcePokemonSpecies = await fetch(pokemonSpeciesUrl);
   const pokemonSpeciesData = await responcePokemonSpecies.json();
 
+  // 進化チェーンのURLを取得
+  const evolutionChainUrl = pokemonSpeciesData.evolution_chain.url;
+
+  // 進化チェーンのデータを取得
+  const responceEvolutionChain = await fetch(evolutionChainUrl);
+  const evolutionChainData = await responceEvolutionChain.json();
+
+// 開発時、中身確認用
+// console.log("進化チェーンのデータは", evolutionChainData);
+
+  // 進化するポケモンを取得
+  const evolutionPokemons = [];
+
+  let evolutionData = evolutionChainData.chain;
+
+  while (evolutionData) {
+    evolutionPokemons.push(evolutionData.species.name);
+
+    if (evolutionData.evolves_to.length === 0) {
+      break;
+    }
+
+    evolutionData = evolutionData.evolves_to[0];
+  }
+
+  // console.log("進化ポケモンは", evolutionPokemons);
+  
+
+  // 進化ポケモンを日本語名に変換
+const evolutionJaNames = await Promise.all(
+  evolutionPokemons.map(async (pokemonName: string) => {
+    const responceSpecies = await fetch(
+      `https://pokeapi.co/api/v2/pokemon-species/${pokemonName}`
+    );
+
+    const speciesData = await responceSpecies.json();
+
+    const jaName = speciesData.names.find(
+      (nameData: { language: { name: string }; name: string }) => {
+        return nameData.language.name === "ja";
+      }
+    );
+
+    return jaName.name;
+  })
+);
+
+// console.log("進化ポケモン日本語名", evolutionJaNames);
+
+
   // 日本語名を取得
   const pokemonJaName = pokemonSpeciesData.names.find(
     (nameData: { language: { name: string }; name: string }) => {
@@ -139,6 +189,8 @@ const pokemonJaAbilities = pokemonAbilitiesData.map((pokemonAbilityData) => {
       </div>
       
       <p>特性：{pokemonJaAbilities.join("・")}</p>
+
+      <p>進化：{evolutionJaNames.join(" → ")}</p>
 
     </>
   );
