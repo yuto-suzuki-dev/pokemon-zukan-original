@@ -46,9 +46,9 @@ export default async function Home() {
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
   //console.log("1匹目のポケモンのタイプのひとつめは", pokemonDetailsResults[0].types[0].type.name,"です");
   const pokemonAllDetailTypesUrls = pokemonDetailsResults.map((pokemonDetailData) => {
-      const pokemonTypeUrls = pokemonDetailData.types.map((pokemonTypeData: { type: { name: string; url: string; }; }) => {
-        const pokemonTypeUrl = pokemonTypeData.type.url; //１，まずタイプ１件分からURLを取り出す
-       // console.log("タイプのURLは", pokemonTypeUrl);
+    const pokemonTypeUrls = pokemonDetailData.types.map((pokemonTypeData: { type: { name: string; url: string; }; }) => {
+      const pokemonTypeUrl = pokemonTypeData.type.url; //１，まずタイプ１件分からURLを取り出す
+      // console.log("タイプのURLは", pokemonTypeUrl);
       return pokemonTypeUrl; //２，１件分のタイプURLをmapの結果として返す
     });
     return pokemonTypeUrls;
@@ -57,10 +57,10 @@ export default async function Home() {
 
   const responcePokemonAllTypesDetailUrl = pokemonAllDetailTypesUrls.map(async(pokemonTypeUrls) => {
     const pokemonTypes = pokemonTypeUrls.map(async(pokemonTypeUrl : string) => {
-     const responcePokemonTypeUrl = await fetch(pokemonTypeUrl);
+      const responcePokemonTypeUrl = await fetch(pokemonTypeUrl);
       return await responcePokemonTypeUrl.json();
     });
-    return  await Promise.all(pokemonTypes);
+    return await Promise.all(pokemonTypes);
   });
   const pokemonTypesResults = await Promise.all(responcePokemonAllTypesDetailUrl);
   //console.log("ポケモンのタイプは",pokemonTypesResults,"です");
@@ -74,7 +74,7 @@ export default async function Home() {
     });
     return pokemonJaTypeData;
   });
- // console.log("ポケモンの1匹目のタイプは",pokemonsJaTypes); //ポケモンのタイプ日本語で表示
+  // console.log("ポケモンの1匹目のタイプは",pokemonsJaTypes); //ポケモンのタイプ日本語で表示
 
 
 
@@ -138,22 +138,27 @@ export default async function Home() {
   )
 
   return (
-    <>
+    <main className="min-h-screen bg-gray-50 px-4 py-8">
+
       {/* Header部分 */}
-      <h1 className="font-bold">ポケモン図鑑</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">
+        ポケモン図鑑
+      </h1>
 
       {/* Main部分 */}
 
       {/* 検索ボタン */}
-      <Link href="/search">
-        <button className="block py-2 w-20 border mb-5 bg-gray-50 mx-auto hover:bg-gray-100 cursor-pointer">
+      <div className="flex justify-center mb-8">
+        <Link
+          href="/search"
+          className="py-2 px-6 border rounded bg-white hover:bg-gray-100 cursor-pointer"
+        >
           検索する
-        </button>
-      </Link>
+        </Link>
+      </div>
 
       {/* ポケモンのカード表示するエリア全体 */}
-      <div className="grid grid-cols-3 gap-6 w-full max-w-[1200px] mx-auto">
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-300 mx-auto">
 
         {/*ポケモンのそれぞれの番号を取得する############ */}
         {/* APIから取得したポケモンのURLを"/"ごとに分解しurlPartsとする */}
@@ -169,48 +174,59 @@ export default async function Home() {
 
           // ############################################
           //return の先はポケモン1匹あたりのカードの表示部分
-         return (
-  //######################
-  // ポケモンのカード単体
-  // keyはReact1枚ずつに対するReactへの目印
-  //######################
-  <Link key={pokemon.url} href={`/pokemon/${pokemonNumber}`}>
-    <div className="border p-4 rounded hover:bg-gray-100 cursor-pointer">
+          return (
+            //######################
+            // ポケモンのカード単体
+            // keyはReact1枚ずつに対するReactへの目印
+            //######################
+            <Link
+              key={pokemon.url}
+              href={`/pokemon/${pokemonNumber}`}
+              className="block h-full"
+            >
+              <div className="h-full border p-3 rounded-lg bg-white shadow-sm hover:bg-gray-100 hover:shadow-md cursor-pointer flex flex-col">
 
-      {/* ポケモンの画像 */}
-      <div className="h-80 mb-5 flex justify-center items-center">
-        <img
-          src={pokemonImages[index]}
-          alt={pokemon.name}
-          className="max-w-full max-h-full"
-        />
-      </div>
+                {/* ポケモンの画像 */}
+                <div className="h-44 mb-2 flex justify-center items-center">
+                  <img
+                    src={pokemonImages[index]}
+                    alt={pokemon.name}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
 
-      {/* ポケモンの図鑑番号 */}
-      <div className="text-center">
-        #{pokemonNumber}
-      </div>
+                {/* ポケモンの番号・名前・タイプ */}
+                <div className="flex items-center justify-center gap-4 mb-2">
 
-      {/* ポケモンの名前 */}
-      <div className="font-bold text-center">
-        {pokemonJaNames[index]}
-      </div>
+                {/* ポケモンの図鑑番号 */}
+                <div className="text-gray-600">
+                  #{pokemonNumber}
+                </div>
 
-      {/* ポケモンのタイプ */}
-      <div className="text-center">
-        {pokemonsJaTypes[index].join("・")}
-      </div>
+                {/* ポケモンの名前 */}
+                <div className="font-bold text-lg">
+                  {pokemonJaNames[index]}
+                </div>
 
-      {/* ポケモンの説明文 */}
-      <div className="text-sm border rounded py-2 w-20 text-center mx-auto mt-2 mb-2">
-        {pokemonDescriptions[index]}
-      </div>
+                {/* ポケモンのタイプ */}
+                <div>
+                  {pokemonsJaTypes[index].join("・")}
+                </div>
 
-    </div>
-        </Link>
-    );
-  })}
+                </div>
+
+                {/* ポケモンの説明文 */}
+                <div className="text-sm border rounded px-3 py-2 w-full leading-5 bg-gray-50 h-21 overflow-hidden flex items-center">
+                  <p className="w-full text-left">
+                    {pokemonDescriptions[index]}
+                  </p>
+                </div>
+
+              </div>
+            </Link>
+          );
+        })}
       </div>
-    </>
+    </main>
   );
 }
