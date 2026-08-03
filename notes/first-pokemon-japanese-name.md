@@ -10,3 +10,4 @@
     return nameData.language.name === "ja"
   });
   console.log("ポケモンの日本語名を取得した！ポケモンの名前は",jaPokemonName.name,"だった");
+  
