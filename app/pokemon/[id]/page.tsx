@@ -16,9 +16,24 @@ export default async function PokemonDetailPage({ params }: DetailPageProps) {
   // ポケモンの画像を取得
   const pokemonImage = pokemonDetail.sprites.other["official-artwork"].front_default;
 
+  // 日本語名取得用のURL
+  const pokemonSpeciesUrl = pokemonDetail.species.url;
+
+  // Speciesの詳細データを取得
+  const responcePokemonSpecies = await fetch(pokemonSpeciesUrl);
+  const pokemonSpeciesData = await responcePokemonSpecies.json();
+
+  // 日本語名を取得
+  const pokemonJaName = pokemonSpeciesData.names.find(
+    (nameData: { language: { name: string }; name: string }) => {
+      return nameData.language.name === "ja";
+    }
+  );
+
   // 開発時、中身確認用
   // console.log("ポケモンの詳細データは", pokemonDetail);
   // console.log("ポケモンの画像は", pokemonImage);
+  // console.log("ポケモンの日本語名は", pokemonJaName);
 
   return (
     <>
@@ -34,7 +49,8 @@ export default async function PokemonDetailPage({ params }: DetailPageProps) {
 
       <p>図鑑番号：{id}</p>
 
-      <p>英語名：{pokemonDetail.name}</p>
+      <p>ポケモンの名前：{pokemonJaName.name}</p>
+
     </>
   );
 }
