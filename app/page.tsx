@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 //＃＃＃＃＃＃＃＃＃＃
 //データの定義部分
 //＃＃＃＃＃＃＃＃＃＃
@@ -72,7 +74,7 @@ export default async function Home() {
     });
     return pokemonJaTypeData;
   });
-  console.log("ポケモンの1匹目のタイプは",pokemonsJaTypes); //ポケモンのタイプ日本語で表示
+ // console.log("ポケモンの1匹目のタイプは",pokemonsJaTypes); //ポケモンのタイプ日本語で表示
 
 
 
@@ -140,43 +142,48 @@ export default async function Home() {
 
           // ############################################
           //return の先はポケモン1匹あたりのカードの表示部分
-          // ############################################
-          return (
-            //######################
-            // ポケモンのカード単体 
-            // keyはReact1枚ずつに対するReactへの目印
-            //######################
-            <div key={pokemon.url} className="border p-4 rounded hover:bg-gray-100 cursor-pointer">
+         return (
+  //######################
+  // ポケモンのカード単体
+  // keyはReact1枚ずつに対するReactへの目印
+  //######################
+  <Link key={pokemon.url} href={`/pokemon/${pokemonNumber}`}>
+    <div className="border p-4 rounded hover:bg-gray-100 cursor-pointer">
 
-              {/* ポケモンの画像 */}
-              <div className="h-80  mb-5 flex justify-center items-center">
-                <img src={pokemonImages[index]} alt={pokemon.name} className="max-w-full max-h-full" />
-              </div>
+      {/* ポケモンの画像 */}
+      <div className="h-80 mb-5 flex justify-center items-center">
+        <img
+          src={pokemonImages[index]}
+          alt={pokemon.name}
+          className="max-w-full max-h-full"
+        />
+      </div>
 
-              {/* ポケモンの図鑑番号 */}
-              <div className="text-center">
-                #{pokemonNumber}
-              </div>
+      {/* ポケモンの図鑑番号 */}
+      <div className="text-center">
+        #{pokemonNumber}
+      </div>
 
-              {/* ポケモンの名前 */}
-              <div className="font-bold text-center">
-                {pokemonJaNames[index]}
-              </div>
+      {/* ポケモンの名前 */}
+      <div className="font-bold text-center">
+        {pokemonJaNames[index]}
+      </div>
 
-              {/* ポケモンのタイプ１ */}
-              <div className="text-center">
-                {pokemonsJaTypes[index].join("・")}
-              </div>
+      {/* ポケモンのタイプ */}
+      <div className="text-center">
+        {pokemonsJaTypes[index].join("・")}
+      </div>
 
-              {/* ポケモンの説明文 */}
-              <div className="text-sm border rounded py-2 w-20 text-center mx-auto mt-2 mb-2">
-                未取得
-              </div>
+      {/* ポケモンの説明文 */}
+      <div className="text-sm border rounded py-2 w-20 text-center mx-auto mt-2 mb-2">
+        未取得
+      </div>
 
-            </div>
-          )
-        })}
+    </div>
+        </Link>
+    );
+  })}
       </div>
     </>
-  )
+  );
 }
