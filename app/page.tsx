@@ -342,16 +342,6 @@ export default async function Home({ searchParams }: HomeProps) {
 
       {/* Main部分 */}
 
-      {/* 検索ボタン */}
-      <div className="flex justify-center mb-8">
-        <Link
-          href="/search"
-          className="py-2 px-6 border rounded bg-white hover:bg-gray-100 cursor-pointer"
-        >
-          検索する
-        </Link>
-      </div>
-
       {/* 現在のページ情報 */}
       <div className="text-center mb-5">
         <p className="font-bold">
@@ -506,3 +496,4 @@ export default async function Home({ searchParams }: HomeProps) {
     </main>
   );
 }
+

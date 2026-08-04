@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import SearchModal from "@/components/SearchModal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +25,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <html
       lang="ja"
@@ -34,7 +34,6 @@ export default function RootLayout({
 
         {/* 全ページ共通のヘッダー */}
         <header className="border-b-4 border-red-800 bg-red-600 shadow-md">
-
           <div className="w-full max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
 
             {/* アプリ名 */}
@@ -56,27 +55,11 @@ export default function RootLayout({
                 ポケモン一覧
               </Link>
 
-              {/* 検索画面へのリンク */}
-              <Link
-                href="/search"
-                className="flex w-40 items-center gap-3 rounded-lg border-2 border-white bg-white px-4 py-2 text-slate-500 shadow-sm hover:bg-red-50"
-              >
-                <span
-                  aria-hidden="true"
-                  className="text-xl"
-                >
-                  🔍
-                </span>
-
-                <span className="font-bold">
-                  検索する
-                </span>
-              </Link>
+              {/* 検索モーダル */}
+              <SearchModal />
 
             </nav>
-
           </div>
-
         </header>
 
         {/* 各ページの内容 */}
@@ -86,9 +69,7 @@ export default function RootLayout({
 
         {/* 全ページ共通のフッター */}
         <footer className="border-t-4 border-red-800 bg-red-600 mt-8">
-
           <div className="w-full max-w-6xl mx-auto px-4 py-6 text-center text-white">
-
             <p className="text-lg font-bold tracking-wide">
               ポケモン図鑑
             </p>
@@ -100,9 +81,7 @@ export default function RootLayout({
             <p className="text-xs text-red-200 mt-2">
               Pokémon data provided by PokeAPI
             </p>
-
           </div>
-
         </footer>
 
       </body>

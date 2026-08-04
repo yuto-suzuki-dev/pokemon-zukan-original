@@ -90,9 +90,11 @@ const pokemonTypeDesign: {
 export default async function PokemonDetailPage({
   params,
 }: DetailPageProps) {
-
   // URLから図鑑番号を取得
   const { id } = await params;
+
+  // 全国図鑑で表示する最大番号
+  const totalPokemonCount = 1025;
 
   // ポケモンの詳細データを取得
   const responce = await fetch(
@@ -102,8 +104,10 @@ export default async function PokemonDetailPage({
   const pokemonDetail = await responce.json();
 
   // ポケモンの画像を取得
+  // 公式画像がない場合は通常画像を使用する
   const pokemonImage =
-    pokemonDetail.sprites.other["official-artwork"].front_default;
+    pokemonDetail.sprites.other["official-artwork"].front_default ??
+    pokemonDetail.sprites.front_default;
 
   // ポケモンの高さを取得
   // APIの高さは10分の1メートル単位なので10で割る
@@ -133,7 +137,6 @@ export default async function PokemonDetailPage({
 
   const responcePokemonTypes = pokemonTypeUrls.map(
     async (pokemonTypeUrl: string) => {
-
       const responcePokemonType = await fetch(pokemonTypeUrl);
 
       return await responcePokemonType.json();
@@ -147,7 +150,6 @@ export default async function PokemonDetailPage({
   // 日本語タイプを取得
   const pokemonJaTypes = pokemonTypesData.map(
     (pokemonTypeData) => {
-
       const pokemonJaType = pokemonTypeData.names.find(
         (
           typeData: {
@@ -161,7 +163,8 @@ export default async function PokemonDetailPage({
         }
       );
 
-      return pokemonJaType.name;
+      // 日本語タイプがない場合は英語名を使用する
+      return pokemonJaType?.name ?? pokemonTypeData.name;
     }
   );
 
@@ -198,17 +201,23 @@ export default async function PokemonDetailPage({
         };
       }
     ) => {
-      return pokemonAbilityData.ability.url;
+      return {
+        name: pokemonAbilityData.ability.name,
+        url: pokemonAbilityData.ability.url,
+      };
     }
   );
 
   const responcePokemonAbilities = pokemonAbilities.map(
-    async (pokemonAbilityUrl: string) => {
+    async (pokemonAbility: { name: string; url: string }) => {
+      const responcePokemonAbility = await fetch(
+        pokemonAbility.url
+      );
 
-      const responcePokemonAbility =
-        await fetch(pokemonAbilityUrl);
-
-      return await responcePokemonAbility.json();
+      return {
+        englishName: pokemonAbility.name,
+        detail: await responcePokemonAbility.json(),
+      };
     }
   );
 
@@ -219,21 +228,25 @@ export default async function PokemonDetailPage({
   // 日本語の特性名を取得
   const pokemonJaAbilities = pokemonAbilitiesData.map(
     (pokemonAbilityData) => {
-
-      const pokemonJaAbility = pokemonAbilityData.names.find(
-        (
-          abilityData: {
-            language: {
+      const pokemonJaAbility =
+        pokemonAbilityData.detail.names.find(
+          (
+            abilityData: {
+              language: {
+                name: string;
+              };
               name: string;
-            };
-            name: string;
+            }
+          ) => {
+            return abilityData.language.name === "ja";
           }
-        ) => {
-          return abilityData.language.name === "ja";
-        }
-      );
+        );
 
-      return pokemonJaAbility.name;
+      // 日本語の特性名がない場合は英語名を使用する
+      return (
+        pokemonJaAbility?.name ??
+        pokemonAbilityData.englishName
+      );
     }
   );
 
@@ -252,20 +265,35 @@ export default async function PokemonDetailPage({
     await responcePokemonSpecies.json();
 
   // ポケモンの分類を取得
-  const pokemonCategoryData = pokemonSpeciesData.genera.find(
-    (
-      categoryData: {
-        language: {
-          name: string;
-        };
-        genus: string;
+  // 日本語の分類がない場合は英語、それもない場合は「分類未取得」とする
+  const pokemonCategoryData =
+    pokemonSpeciesData.genera.find(
+      (
+        categoryData: {
+          language: {
+            name: string;
+          };
+          genus: string;
+        }
+      ) => {
+        return categoryData.language.name === "ja";
       }
-    ) => {
-      return categoryData.language.name === "ja";
-    }
-  );
+    ) ??
+    pokemonSpeciesData.genera.find(
+      (
+        categoryData: {
+          language: {
+            name: string;
+          };
+          genus: string;
+        }
+      ) => {
+        return categoryData.language.name === "en";
+      }
+    );
 
-  const pokemonCategory = pokemonCategoryData.genus;
+  const pokemonCategory =
+    pokemonCategoryData?.genus ?? "分類未取得";
 
   // 開発時、中身確認用
   // console.log("ポケモンの分類は", pokemonCategory);
@@ -285,42 +313,47 @@ export default async function PokemonDetailPage({
       }
     );
 
-  const pokemonDescription =
-    pokemonDescriptionData.flavor_text
-      .replace(/\n/g, " ")
-      .replace(/\f/g, " ");
+  // 日本語の説明文がない場合は未取得メッセージを表示する
+  const pokemonDescription = pokemonDescriptionData
+    ? pokemonDescriptionData.flavor_text
+        .replace(/\n/g, " ")
+        .replace(/\f/g, " ")
+    : "日本語の説明文は未取得です。";
 
   // 開発時、中身確認用
   // console.log("ポケモンの説明文は", pokemonDescription);
 
   // 進化チェーンのURLを取得
   const evolutionChainUrl =
-    pokemonSpeciesData.evolution_chain.url;
-
-  // 進化チェーンのデータを取得
-  const responceEvolutionChain = await fetch(
-    evolutionChainUrl
-  );
-
-  const evolutionChainData =
-    await responceEvolutionChain.json();
-
-  // 開発時、中身確認用
-  // console.log("進化チェーンのデータは", evolutionChainData);
+    pokemonSpeciesData.evolution_chain?.url;
 
   // 進化するポケモンを取得
   const evolutionPokemons: string[] = [];
 
-  let evolutionData = evolutionChainData.chain;
+  // 進化チェーンが存在する場合だけ取得する
+  if (evolutionChainUrl) {
+    // 進化チェーンのデータを取得
+    const responceEvolutionChain = await fetch(
+      evolutionChainUrl
+    );
 
-  while (evolutionData) {
-    evolutionPokemons.push(evolutionData.species.name);
+    const evolutionChainData =
+      await responceEvolutionChain.json();
 
-    if (evolutionData.evolves_to.length === 0) {
-      break;
+    // 開発時、中身確認用
+    // console.log("進化チェーンのデータは", evolutionChainData);
+
+    let evolutionData = evolutionChainData.chain;
+
+    while (evolutionData) {
+      evolutionPokemons.push(evolutionData.species.name);
+
+      if (evolutionData.evolves_to.length === 0) {
+        break;
+      }
+
+      evolutionData = evolutionData.evolves_to[0];
     }
-
-    evolutionData = evolutionData.evolves_to[0];
   }
 
   // console.log("進化ポケモンは", evolutionPokemons);
@@ -328,7 +361,6 @@ export default async function PokemonDetailPage({
   // 進化ポケモンを日本語名に変換
   const evolutionJaNames = await Promise.all(
     evolutionPokemons.map(async (pokemonName: string) => {
-
       const responceSpecies = await fetch(
         `https://pokeapi.co/api/v2/pokemon-species/${pokemonName}`
       );
@@ -348,7 +380,8 @@ export default async function PokemonDetailPage({
         }
       );
 
-      return jaName.name;
+      // 日本語名がない場合は英語名を使用する
+      return jaName?.name ?? pokemonName;
     })
   );
 
@@ -356,85 +389,103 @@ export default async function PokemonDetailPage({
 
   // 進化ポケモンの画像・番号・日本語タイプを取得
   const evolutionPokemonDetails = await Promise.all(
-    evolutionPokemons.map(async (pokemonName: string, index: number) => {
+    evolutionPokemons.map(
+      async (pokemonName: string, index: number) => {
+        // 進化ポケモン1匹分の詳細データを取得
+        const responceEvolutionPokemon = await fetch(
+          `https://pokeapi.co/api/v2/pokemon/${pokemonName}`
+        );
 
-      // 進化ポケモン1匹分の詳細データを取得
-      const responceEvolutionPokemon = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/${pokemonName}`
-      );
+        const evolutionPokemonData =
+          await responceEvolutionPokemon.json();
 
-      const evolutionPokemonData =
-        await responceEvolutionPokemon.json();
+        // 進化ポケモンの画像を取得
+        const evolutionPokemonImage =
+          evolutionPokemonData.sprites.other[
+            "official-artwork"
+          ].front_default ??
+          evolutionPokemonData.sprites.front_default;
 
-      // 進化ポケモンの画像を取得
-      const evolutionPokemonImage =
-        evolutionPokemonData.sprites.other[
-          "official-artwork"
-        ].front_default;
+        // 進化ポケモンの図鑑番号を取得
+        const evolutionPokemonNumber =
+          evolutionPokemonData.id;
 
-      // 進化ポケモンの図鑑番号を取得
-      const evolutionPokemonNumber =
-        evolutionPokemonData.id;
-
-      // 進化ポケモンのタイプURLを取得
-      const evolutionPokemonTypeUrls =
-        evolutionPokemonData.types.map(
-          (
-            pokemonTypeData: {
-              type: {
-                name: string;
-                url: string;
+        // 進化ポケモンのタイプURLを取得
+        const evolutionPokemonTypeUrls =
+          evolutionPokemonData.types.map(
+            (
+              pokemonTypeData: {
+                type: {
+                  name: string;
+                  url: string;
+                };
+              }
+            ) => {
+              return {
+                name: pokemonTypeData.type.name,
+                url: pokemonTypeData.type.url,
               };
             }
-          ) => {
-            return pokemonTypeData.type.url;
-          }
-        );
+          );
 
-      // 進化ポケモンのタイプ詳細データを取得
-      const evolutionPokemonTypesData =
-        await Promise.all(
-          evolutionPokemonTypeUrls.map(
-            async (pokemonTypeUrl: string) => {
-
-              const responcePokemonType =
-                await fetch(pokemonTypeUrl);
-
-              return await responcePokemonType.json();
-            }
-          )
-        );
-
-      // 進化ポケモンの日本語タイプを取得
-      const evolutionPokemonJaTypes =
-        evolutionPokemonTypesData.map(
-          (pokemonTypeData) => {
-
-            const pokemonJaType =
-              pokemonTypeData.names.find(
-                (
-                  typeData: {
-                    language: {
-                      name: string;
-                    };
-                    name: string;
-                  }
-                ) => {
-                  return typeData.language.name === "ja";
+        // 進化ポケモンのタイプ詳細データを取得
+        const evolutionPokemonTypesData =
+          await Promise.all(
+            evolutionPokemonTypeUrls.map(
+              async (
+                pokemonType: {
+                  name: string;
+                  url: string;
                 }
+              ) => {
+                const responcePokemonType =
+                  await fetch(pokemonType.url);
+
+                return {
+                  englishName: pokemonType.name,
+                  detail:
+                    await responcePokemonType.json(),
+                };
+              }
+            )
+          );
+
+        // 進化ポケモンの日本語タイプを取得
+        const evolutionPokemonJaTypes =
+          evolutionPokemonTypesData.map(
+            (pokemonTypeData) => {
+              const pokemonJaType =
+                pokemonTypeData.detail.names.find(
+                  (
+                    typeData: {
+                      language: {
+                        name: string;
+                      };
+                      name: string;
+                    }
+                  ) => {
+                    return (
+                      typeData.language.name === "ja"
+                    );
+                  }
+                );
+
+              return (
+                pokemonJaType?.name ??
+                pokemonTypeData.englishName
               );
+            }
+          );
 
-            return pokemonJaType.name;
-          }
-        );
-
-      return {
-        id: evolutionPokemonNumber,
-        image: evolutionPokemonImage,
-        jaName: evolutionJaNames[index],
-        types: evolutionPokemonJaTypes,
-      };
-    })
+        return {
+          id: evolutionPokemonNumber,
+          image: evolutionPokemonImage,
+          jaName:
+            evolutionJaNames[index] ?? pokemonName,
+          types: evolutionPokemonJaTypes,
+        };
+      }
+    )
   );
 
   // 開発時、中身確認用
@@ -444,7 +495,7 @@ export default async function PokemonDetailPage({
   // );
 
   // 日本語名を取得
-  const pokemonJaName = pokemonSpeciesData.names.find(
+  const pokemonJaNameData = pokemonSpeciesData.names.find(
     (
       nameData: {
         language: {
@@ -456,6 +507,10 @@ export default async function PokemonDetailPage({
       return nameData.language.name === "ja";
     }
   );
+
+  // 日本語名がない場合は英語名を表示する
+  const pokemonJaName =
+    pokemonJaNameData?.name ?? pokemonDetail.name;
 
   // 開発時、中身確認用
   // console.log("ポケモンの詳細データは", pokemonDetail);
@@ -471,7 +526,6 @@ export default async function PokemonDetailPage({
   let previousPokemonJaName = "";
 
   if (pokemonNumber > 1) {
-
     const responcePreviousPokemonSpecies = await fetch(
       `https://pokeapi.co/api/v2/pokemon-species/${previousPokemonNumber}`
     );
@@ -494,33 +548,40 @@ export default async function PokemonDetailPage({
       );
 
     previousPokemonJaName =
-      previousPokemonNameData.name;
+      previousPokemonNameData?.name ??
+      previousPokemonSpeciesData.name;
   }
 
   // 次のポケモンの日本語名を取得
-  const responceNextPokemonSpecies = await fetch(
-    `https://pokeapi.co/api/v2/pokemon-species/${nextPokemonNumber}`
-  );
+  let nextPokemonJaName = "";
 
-  const nextPokemonSpeciesData =
-    await responceNextPokemonSpecies.json();
-
-  const nextPokemonNameData =
-    nextPokemonSpeciesData.names.find(
-      (
-        nameData: {
-          language: {
-            name: string;
-          };
-          name: string;
-        }
-      ) => {
-        return nameData.language.name === "ja";
-      }
+  // 1025番より後は取得しない
+  if (pokemonNumber < totalPokemonCount) {
+    const responceNextPokemonSpecies = await fetch(
+      `https://pokeapi.co/api/v2/pokemon-species/${nextPokemonNumber}`
     );
 
-  const nextPokemonJaName =
-    nextPokemonNameData.name;
+    const nextPokemonSpeciesData =
+      await responceNextPokemonSpecies.json();
+
+    const nextPokemonNameData =
+      nextPokemonSpeciesData.names.find(
+        (
+          nameData: {
+            language: {
+              name: string;
+            };
+            name: string;
+          }
+        ) => {
+          return nameData.language.name === "ja";
+        }
+      );
+
+    nextPokemonJaName =
+      nextPokemonNameData?.name ??
+      nextPokemonSpeciesData.name;
+  }
 
   // 開発時、中身確認用
   // console.log("前のポケモンは", previousPokemonJaName);
@@ -528,10 +589,8 @@ export default async function PokemonDetailPage({
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 pt-4 pb-8">
-
       {/* 戻るボタン・前後のポケモン・名前と図鑑番号 */}
       <div className="relative w-full max-w-6xl mx-auto mb-4 min-h-17.5">
-
         {/* 一覧画面へ戻る */}
         <div className="absolute left-0 top-0">
           <Link
@@ -554,7 +613,10 @@ export default async function PokemonDetailPage({
               </p>
 
               <p className="text-sm text-slate-500 mt-1">
-                #{String(previousPokemonNumber).padStart(4, "0")}
+                #
+                {String(
+                  previousPokemonNumber
+                ).padStart(4, "0")}
               </p>
             </Link>
           )}
@@ -563,7 +625,7 @@ export default async function PokemonDetailPage({
         {/* ポケモンの名前と図鑑番号 */}
         <div className="absolute left-1/2 top-0 -translate-x-1/2 text-center">
           <h1 className="text-3xl font-bold text-slate-800">
-            {pokemonJaName.name}
+            {pokemonJaName}
           </h1>
 
           <p className="text-slate-500 mt-1">
@@ -573,47 +635,55 @@ export default async function PokemonDetailPage({
 
         {/* 次のポケモンへ移動 */}
         <div className="absolute right-0 top-0 text-center">
-          <Link
-            href={`/pokemon/${nextPokemonNumber}`}
-            className="hover:underline"
-          >
-            <p className="font-medium">
-              {nextPokemonJaName} →
-            </p>
+          {pokemonNumber < totalPokemonCount && (
+            <Link
+              href={`/pokemon/${nextPokemonNumber}`}
+              className="hover:underline"
+            >
+              <p className="font-medium">
+                {nextPokemonJaName} →
+              </p>
 
-            <p className="text-sm text-slate-500 mt-1">
-              #{String(nextPokemonNumber).padStart(4, "0")}
-            </p>
-          </Link>
+              <p className="text-sm text-slate-500 mt-1">
+                #
+                {String(nextPokemonNumber).padStart(
+                  4,
+                  "0"
+                )}
+              </p>
+            </Link>
+          )}
         </div>
-
       </div>
 
       {/* ポケモンの詳細情報全体 */}
       <div className="w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[360px_1fr] gap-6">
-
         {/* 左側：画像とステータス */}
         <div className="border border-slate-200 rounded-xl bg-white p-5 shadow-sm">
-
           {/* ポケモンの画像 */}
           <div className="h-72 flex justify-center items-center mb-5 bg-linear-to-b from-sky-50 to-white rounded-lg">
-            <img
-              src={pokemonImage}
-              alt={pokemonDetail.name}
-              className="max-w-full max-h-full object-contain"
-            />
+            {pokemonImage ? (
+              <img
+                src={pokemonImage}
+                alt={pokemonDetail.name}
+                className="max-w-full max-h-full object-contain"
+              />
+            ) : (
+              <p className="text-slate-400">
+                画像未取得
+              </p>
+            )}
           </div>
 
           {/* ポケモンのステータス */}
           <div className="grid grid-cols-6 gap-1 border border-slate-200 rounded-lg bg-slate-50 px-2 py-3">
-
             <div className="text-center">
               <p className="text-[10px] font-bold text-red-600">
                 HP
               </p>
 
               <p className="text-sm font-bold mt-1">
-                {pokemonStatus[0].statusValue}
+                {pokemonStatus[0]?.statusValue ?? "-"}
               </p>
             </div>
 
@@ -623,7 +693,7 @@ export default async function PokemonDetailPage({
               </p>
 
               <p className="text-sm font-bold mt-1">
-                {pokemonStatus[1].statusValue}
+                {pokemonStatus[1]?.statusValue ?? "-"}
               </p>
             </div>
 
@@ -633,7 +703,7 @@ export default async function PokemonDetailPage({
               </p>
 
               <p className="text-sm font-bold mt-1">
-                {pokemonStatus[2].statusValue}
+                {pokemonStatus[2]?.statusValue ?? "-"}
               </p>
             </div>
 
@@ -643,7 +713,7 @@ export default async function PokemonDetailPage({
               </p>
 
               <p className="text-sm font-bold mt-1">
-                {pokemonStatus[3].statusValue}
+                {pokemonStatus[3]?.statusValue ?? "-"}
               </p>
             </div>
 
@@ -653,7 +723,7 @@ export default async function PokemonDetailPage({
               </p>
 
               <p className="text-sm font-bold mt-1">
-                {pokemonStatus[4].statusValue}
+                {pokemonStatus[4]?.statusValue ?? "-"}
               </p>
             </div>
 
@@ -663,19 +733,16 @@ export default async function PokemonDetailPage({
               </p>
 
               <p className="text-sm font-bold mt-1">
-                {pokemonStatus[5].statusValue}
+                {pokemonStatus[5]?.statusValue ?? "-"}
               </p>
             </div>
-
           </div>
         </div>
 
         {/* 右側：基本情報・タイプ・説明文 */}
         <div className="border border-slate-200 rounded-xl bg-white p-6 shadow-sm">
-
           {/* 高さ・重さ・分類・特性 */}
           <div className="grid grid-cols-4 gap-3 mb-7">
-
             {/* 高さ */}
             <div className="border border-sky-200 rounded-lg bg-sky-50 px-2 py-4 text-center">
               <p className="text-sm font-bold text-sky-700 mb-2">
@@ -719,7 +786,6 @@ export default async function PokemonDetailPage({
                 {pokemonJaAbilities.join("・")}
               </p>
             </div>
-
           </div>
 
           {/* ポケモンのタイプ */}
@@ -729,30 +795,29 @@ export default async function PokemonDetailPage({
             </h2>
 
             <div className="flex flex-wrap gap-3">
-              {pokemonJaTypes.map((pokemonType: string) => {
+              {pokemonJaTypes.map(
+                (pokemonType: string) => {
+                  const typeDesign =
+                    pokemonTypeDesign[pokemonType] ?? {
+                      icon: "●",
+                      className:
+                        "bg-slate-100 border-slate-300 text-slate-700",
+                    };
 
-                const typeDesign =
-                  pokemonTypeDesign[pokemonType] ?? {
-                    icon: "●",
-                    className:
-                      "bg-slate-100 border-slate-300 text-slate-700",
-                  };
+                  return (
+                    <div
+                      key={pokemonType}
+                      className={`flex items-center gap-2 border rounded-full px-5 py-2 font-bold ${typeDesign.className}`}
+                    >
+                      <span aria-hidden="true">
+                        {typeDesign.icon}
+                      </span>
 
-                return (
-                  <div
-                    key={pokemonType}
-                    className={`flex items-center gap-2 border rounded-full px-5 py-2 font-bold ${typeDesign.className}`}
-                  >
-                    <span aria-hidden="true">
-                      {typeDesign.icon}
-                    </span>
-
-                    <span>
-                      {pokemonType}
-                    </span>
-                  </div>
-                );
-              })}
+                      <span>{pokemonType}</span>
+                    </div>
+                  );
+                }
+              )}
             </div>
           </div>
 
@@ -768,112 +833,120 @@ export default async function PokemonDetailPage({
               </p>
             </div>
           </div>
-
         </div>
       </div>
 
       {/* ポケモンの進化 */}
       <section className="w-full max-w-5xl mx-auto mt-6">
-
         <h2 className="font-bold text-xl text-slate-700 mb-4">
           進化
         </h2>
 
         {/* 進化ポケモンのカード表示 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          {evolutionPokemonDetails.map(
-            (
-              evolutionPokemon: {
-                id: number;
-                image: string;
-                jaName: string;
-                types: string[];
-              },
-              index: number
-            ) => {
-              return (
-                <div
-                  key={evolutionPokemon.id}
-                  className="relative"
-                >
-
-                  {/* 2匹目以降に進化の矢印を表示 */}
-                  {index > 0 && (
-                    <div className="hidden md:block absolute -left-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">
-                      →
-                    </div>
-                  )}
-
-                  <Link
-                    href={`/pokemon/${evolutionPokemon.id}`}
-                    className="block h-full"
+        {evolutionPokemonDetails.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {evolutionPokemonDetails.map(
+              (
+                evolutionPokemon: {
+                  id: number;
+                  image: string | null;
+                  jaName: string;
+                  types: string[];
+                },
+                index: number
+              ) => {
+                return (
+                  <div
+                    key={evolutionPokemon.id}
+                    className="relative"
                   >
-                    <article className="h-full border border-slate-200 rounded-xl bg-white p-5 shadow-sm hover:bg-slate-100 hover:shadow-md">
-
-                      {/* 進化ポケモンの画像 */}
-                      <div className="h-40 flex justify-center items-center mb-3">
-                        <img
-                          src={evolutionPokemon.image}
-                          alt={evolutionPokemon.jaName}
-                          className="max-w-full max-h-full object-contain"
-                        />
+                    {/* 2匹目以降に進化の矢印を表示 */}
+                    {index > 0 && (
+                      <div className="hidden md:block absolute -left-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">
+                        →
                       </div>
+                    )}
 
-                      {/* 進化ポケモンの日本語名 */}
-                      <h3 className="font-bold text-xl text-center text-slate-800">
-                        {evolutionPokemon.jaName}
-                      </h3>
+                    <Link
+                      href={`/pokemon/${evolutionPokemon.id}`}
+                      className="block h-full"
+                    >
+                      <article className="h-full border border-slate-200 rounded-xl bg-white p-5 shadow-sm hover:bg-slate-100 hover:shadow-md">
+                        {/* 進化ポケモンの画像 */}
+                        <div className="h-40 flex justify-center items-center mb-3">
+                          {evolutionPokemon.image ? (
+                            <img
+                              src={
+                                evolutionPokemon.image
+                              }
+                              alt={
+                                evolutionPokemon.jaName
+                              }
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          ) : (
+                            <p className="text-slate-400">
+                              画像未取得
+                            </p>
+                          )}
+                        </div>
 
-                      {/* 進化ポケモンの図鑑番号 */}
-                      <p className="text-center text-sm text-slate-500 mt-1">
-                        #{String(evolutionPokemon.id).padStart(4, "0")}
-                      </p>
+                        {/* 進化ポケモンの日本語名 */}
+                        <h3 className="font-bold text-xl text-center text-slate-800">
+                          {evolutionPokemon.jaName}
+                        </h3>
 
-                      {/* 進化ポケモンのタイプ */}
-                      <div className="flex flex-wrap justify-center gap-2 mt-4">
+                        {/* 進化ポケモンの図鑑番号 */}
+                        <p className="text-center text-sm text-slate-500 mt-1">
+                          #
+                          {String(
+                            evolutionPokemon.id
+                          ).padStart(4, "0")}
+                        </p>
 
-                        {evolutionPokemon.types.map(
-                          (pokemonType: string) => {
+                        {/* 進化ポケモンのタイプ */}
+                        <div className="flex flex-wrap justify-center gap-2 mt-4">
+                          {evolutionPokemon.types.map(
+                            (pokemonType: string) => {
+                              const typeDesign =
+                                pokemonTypeDesign[
+                                  pokemonType
+                                ] ?? {
+                                  icon: "●",
+                                  className:
+                                    "bg-slate-100 border-slate-300 text-slate-700",
+                                };
 
-                            const typeDesign =
-                              pokemonTypeDesign[pokemonType] ?? {
-                                icon: "●",
-                                className:
-                                  "bg-slate-100 border-slate-300 text-slate-700",
-                              };
+                              return (
+                                <span
+                                  key={pokemonType}
+                                  className={`flex items-center gap-1 border rounded-full px-3 py-1 text-sm font-bold ${typeDesign.className}`}
+                                >
+                                  <span aria-hidden="true">
+                                    {typeDesign.icon}
+                                  </span>
 
-                            return (
-                              <span
-                                key={pokemonType}
-                                className={`flex items-center gap-1 border rounded-full px-3 py-1 text-sm font-bold ${typeDesign.className}`}
-                              >
-                                <span aria-hidden="true">
-                                  {typeDesign.icon}
+                                  <span>
+                                    {pokemonType}
+                                  </span>
                                 </span>
-
-                                <span>
-                                  {pokemonType}
-                                </span>
-                              </span>
-                            );
-                          }
-                        )}
-
-                      </div>
-
-                    </article>
-                  </Link>
-
-                </div>
-              );
-            }
-          )}
-
-        </div>
-
+                              );
+                            }
+                          )}
+                        </div>
+                      </article>
+                    </Link>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        ) : (
+          <div className="border border-slate-200 rounded-xl bg-white p-6 text-center text-slate-500 shadow-sm">
+            進化情報は未取得です。
+          </div>
+        )}
       </section>
-
     </main>
   );
 }
