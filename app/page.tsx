@@ -16,10 +16,92 @@ interface HomeProps {
   }>;
 }
 
+// タイプごとのアイコンと色
+const pokemonTypeDesign: {
+  [key: string]: {
+    icon: string;
+    className: string;
+  };
+} = {
+  ノーマル: {
+    icon: "○",
+    className: "bg-stone-100 border-stone-300 text-stone-700",
+  },
+  ほのお: {
+    icon: "🔥",
+    className: "bg-orange-100 border-orange-300 text-orange-700",
+  },
+  みず: {
+    icon: "💧",
+    className: "bg-blue-100 border-blue-300 text-blue-700",
+  },
+  でんき: {
+    icon: "⚡",
+    className: "bg-yellow-100 border-yellow-300 text-yellow-700",
+  },
+  くさ: {
+    icon: "🌿",
+    className: "bg-green-100 border-green-300 text-green-700",
+  },
+  こおり: {
+    icon: "❄️",
+    className: "bg-cyan-100 border-cyan-300 text-cyan-700",
+  },
+  かくとう: {
+    icon: "✊",
+    className: "bg-red-100 border-red-300 text-red-700",
+  },
+  どく: {
+    icon: "☠️",
+    className: "bg-purple-100 border-purple-300 text-purple-700",
+  },
+  じめん: {
+    icon: "⛰️",
+    className: "bg-amber-100 border-amber-300 text-amber-700",
+  },
+  ひこう: {
+    icon: "🪽",
+    className: "bg-sky-100 border-sky-300 text-sky-700",
+  },
+  エスパー: {
+    icon: "🔮",
+    className: "bg-pink-100 border-pink-300 text-pink-700",
+  },
+  むし: {
+    icon: "🐛",
+    className: "bg-lime-100 border-lime-300 text-lime-700",
+  },
+  いわ: {
+    icon: "🪨",
+    className: "bg-yellow-100 border-yellow-400 text-yellow-800",
+  },
+  ゴースト: {
+    icon: "👻",
+    className: "bg-indigo-100 border-indigo-300 text-indigo-700",
+  },
+  ドラゴン: {
+    icon: "🐉",
+    className: "bg-violet-100 border-violet-300 text-violet-700",
+  },
+  あく: {
+    icon: "🌑",
+    className: "bg-gray-200 border-gray-400 text-gray-800",
+  },
+  はがね: {
+    icon: "⚙️",
+    className: "bg-slate-100 border-slate-300 text-slate-700",
+  },
+  フェアリー: {
+    icon: "✨",
+    className: "bg-rose-100 border-rose-300 text-rose-700",
+  },
+};
+
 //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
 //Home関数 アプリを実行すると最初に実行される関数
 //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
 export default async function Home({ searchParams }: HomeProps) {
+
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
   // ページネーションについて
   // 全国図鑑1番から1025番までを、1ページ30匹ずつ表示する
@@ -89,7 +171,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
   // console.log("dataは", data); //開発時、中身確認用
 
-  const apiPokemons: apiPokemon[] = data.results; // dataのresultsから名前と詳細URLを取り出し、apiPokemonsに入れる
+  const apiPokemons: apiPokemon[] = data.results; //dataのresultsから名前と詳細URLを取り出し、apiPokemonsに入れる
 
   //＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
   //1匹分のポケモンのurlをapiPokemonsからmap(対応付けるの意)で取得。1匹あたりのポケモンのデータは仮でpokemonとする。
@@ -245,7 +327,7 @@ export default async function Home({ searchParams }: HomeProps) {
   //console.log("speciesの詳細データは", pokemonSpeciesDataResults);
 
   const pokemonJaNames = pokemonSpeciesDataResults.map(
-    (pokemonJaName) => {
+    (pokemonJaName, index) => {
       const pokemonJaNameData =
         pokemonJaName.names.find(
           (
@@ -262,7 +344,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
       // 日本語名が存在しない場合は英語名を表示する
       if (!pokemonJaNameData) {
-        return "名前未取得";
+        return apiPokemons[index].name;
       }
 
       return pokemonJaNameData.name;
@@ -335,10 +417,6 @@ export default async function Home({ searchParams }: HomeProps) {
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
-      {/* Header部分 */}
-      <h1 className="text-3xl font-bold text-center mb-8">
-        ポケモン図鑑
-      </h1>
 
       {/* Main部分 */}
 
@@ -359,6 +437,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
       {/* ポケモンのカード表示するエリア全体 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-300 mx-auto">
+
         {/*ポケモンのそれぞれの番号を取得する############ */}
         {/* APIから取得したポケモンのURLを"/"ごとに分解しurlPartsとする */}
         {apiPokemons.map((pokemon, index) => {
@@ -385,6 +464,7 @@ export default async function Home({ searchParams }: HomeProps) {
               className="block h-full"
             >
               <div className="h-full border p-3 rounded-lg bg-white shadow-sm hover:bg-gray-100 hover:shadow-md cursor-pointer flex flex-col">
+
                 {/* ポケモンの画像 */}
                 <div className="h-44 mb-2 flex justify-center items-center">
                   {pokemonImages[index] ? (
@@ -400,11 +480,12 @@ export default async function Home({ searchParams }: HomeProps) {
                   )}
                 </div>
 
-                {/* ポケモンの番号・名前・タイプ */}
-                <div className="flex items-center justify-center gap-4 mb-2">
+                {/* ポケモンの図鑑番号と名前 */}
+                <div className="flex items-center justify-center gap-3 mb-2">
+
                   {/* ポケモンの図鑑番号 */}
-                  <div className="text-gray-600">
-                    #{pokemonNumber}
+                  <div className="text-gray-500">
+                    #{String(pokemonNumber).padStart(4, "0")}
                   </div>
 
                   {/* ポケモンの名前 */}
@@ -412,10 +493,37 @@ export default async function Home({ searchParams }: HomeProps) {
                     {pokemonJaNames[index]}
                   </div>
 
-                  {/* ポケモンのタイプ */}
-                  <div>
-                    {pokemonsJaTypes[index].join("・")}
-                  </div>
+                </div>
+
+                {/* ポケモンのタイプ */}
+                <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
+
+                  {pokemonsJaTypes[index].map(
+                    (pokemonType: string) => {
+                      const typeDesign =
+                        pokemonTypeDesign[pokemonType] ?? {
+                          icon: "●",
+                          className:
+                            "bg-slate-100 border-slate-300 text-slate-700",
+                        };
+
+                      return (
+                        <span
+                          key={pokemonType}
+                          className={`flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-bold ${typeDesign.className}`}
+                        >
+                          <span aria-hidden="true">
+                            {typeDesign.icon}
+                          </span>
+
+                          <span>
+                            {pokemonType}
+                          </span>
+                        </span>
+                      );
+                    }
+                  )}
+
                 </div>
 
                 {/* ポケモンの説明文 */}
@@ -424,6 +532,7 @@ export default async function Home({ searchParams }: HomeProps) {
                     {pokemonDescriptions[index]}
                   </p>
                 </div>
+
               </div>
             </Link>
           );
@@ -435,8 +544,10 @@ export default async function Home({ searchParams }: HomeProps) {
         aria-label="ポケモン一覧のページ切り替え"
         className="w-full max-w-300 mx-auto mt-10"
       >
+
         {/* 前へ・次へボタン */}
         <div className="flex items-center justify-center gap-4 mb-5">
+
           {/* 1ページ目以外で前へボタンを表示 */}
           {currentPage > 1 ? (
             <Link
@@ -469,10 +580,12 @@ export default async function Home({ searchParams }: HomeProps) {
               次へ →
             </span>
           )}
+
         </div>
 
         {/* ページ番号 */}
         <div className="flex flex-wrap justify-center gap-2">
+
           {pageNumbers.map((page) => {
             return (
               <Link
@@ -491,9 +604,11 @@ export default async function Home({ searchParams }: HomeProps) {
               </Link>
             );
           })}
+
         </div>
+
       </nav>
+
     </main>
   );
 }
-
