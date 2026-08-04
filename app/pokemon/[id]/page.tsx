@@ -309,7 +309,7 @@ export default async function PokemonDetailPage({
   // console.log("進化チェーンのデータは", evolutionChainData);
 
   // 進化するポケモンを取得
-  const evolutionPokemons = [];
+  const evolutionPokemons: string[] = [];
 
   let evolutionData = evolutionChainData.chain;
 
@@ -353,6 +353,95 @@ export default async function PokemonDetailPage({
   );
 
   // console.log("進化ポケモン日本語名", evolutionJaNames);
+
+  // 進化ポケモンの画像・番号・日本語タイプを取得
+  const evolutionPokemonDetails = await Promise.all(
+    evolutionPokemons.map(async (pokemonName: string, index: number) => {
+
+      // 進化ポケモン1匹分の詳細データを取得
+      const responceEvolutionPokemon = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${pokemonName}`
+      );
+
+      const evolutionPokemonData =
+        await responceEvolutionPokemon.json();
+
+      // 進化ポケモンの画像を取得
+      const evolutionPokemonImage =
+        evolutionPokemonData.sprites.other[
+          "official-artwork"
+        ].front_default;
+
+      // 進化ポケモンの図鑑番号を取得
+      const evolutionPokemonNumber =
+        evolutionPokemonData.id;
+
+      // 進化ポケモンのタイプURLを取得
+      const evolutionPokemonTypeUrls =
+        evolutionPokemonData.types.map(
+          (
+            pokemonTypeData: {
+              type: {
+                name: string;
+                url: string;
+              };
+            }
+          ) => {
+            return pokemonTypeData.type.url;
+          }
+        );
+
+      // 進化ポケモンのタイプ詳細データを取得
+      const evolutionPokemonTypesData =
+        await Promise.all(
+          evolutionPokemonTypeUrls.map(
+            async (pokemonTypeUrl: string) => {
+
+              const responcePokemonType =
+                await fetch(pokemonTypeUrl);
+
+              return await responcePokemonType.json();
+            }
+          )
+        );
+
+      // 進化ポケモンの日本語タイプを取得
+      const evolutionPokemonJaTypes =
+        evolutionPokemonTypesData.map(
+          (pokemonTypeData) => {
+
+            const pokemonJaType =
+              pokemonTypeData.names.find(
+                (
+                  typeData: {
+                    language: {
+                      name: string;
+                    };
+                    name: string;
+                  }
+                ) => {
+                  return typeData.language.name === "ja";
+                }
+              );
+
+            return pokemonJaType.name;
+          }
+        );
+
+      return {
+        id: evolutionPokemonNumber,
+        image: evolutionPokemonImage,
+        jaName: evolutionJaNames[index],
+        types: evolutionPokemonJaTypes,
+      };
+    })
+  );
+
+  // 開発時、中身確認用
+  // console.log(
+  //   "進化ポケモンのカード用データは",
+  //   evolutionPokemonDetails
+  // );
 
   // 日本語名を取得
   const pokemonJaName = pokemonSpeciesData.names.find(
@@ -684,17 +773,106 @@ export default async function PokemonDetailPage({
       </div>
 
       {/* ポケモンの進化 */}
-      <div className="w-full max-w-5xl mx-auto mt-6 border border-slate-200 rounded-xl bg-white p-6 shadow-sm">
+      <section className="w-full max-w-5xl mx-auto mt-6">
 
-        <h2 className="font-bold text-xl text-center text-slate-700 mb-4">
+        <h2 className="font-bold text-xl text-slate-700 mb-4">
           進化
         </h2>
 
-        <p className="text-center text-lg font-medium">
-          {evolutionJaNames.join(" → ")}
-        </p>
+        {/* 進化ポケモンのカード表示 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-      </div>
+          {evolutionPokemonDetails.map(
+            (
+              evolutionPokemon: {
+                id: number;
+                image: string;
+                jaName: string;
+                types: string[];
+              },
+              index: number
+            ) => {
+              return (
+                <div
+                  key={evolutionPokemon.id}
+                  className="relative"
+                >
+
+                  {/* 2匹目以降に進化の矢印を表示 */}
+                  {index > 0 && (
+                    <div className="hidden md:block absolute -left-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">
+                      →
+                    </div>
+                  )}
+
+                  <Link
+                    href={`/pokemon/${evolutionPokemon.id}`}
+                    className="block h-full"
+                  >
+                    <article className="h-full border border-slate-200 rounded-xl bg-white p-5 shadow-sm hover:bg-slate-100 hover:shadow-md">
+
+                      {/* 進化ポケモンの画像 */}
+                      <div className="h-40 flex justify-center items-center mb-3">
+                        <img
+                          src={evolutionPokemon.image}
+                          alt={evolutionPokemon.jaName}
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+
+                      {/* 進化ポケモンの日本語名 */}
+                      <h3 className="font-bold text-xl text-center text-slate-800">
+                        {evolutionPokemon.jaName}
+                      </h3>
+
+                      {/* 進化ポケモンの図鑑番号 */}
+                      <p className="text-center text-sm text-slate-500 mt-1">
+                        #{String(evolutionPokemon.id).padStart(4, "0")}
+                      </p>
+
+                      {/* 進化ポケモンのタイプ */}
+                      <div className="flex flex-wrap justify-center gap-2 mt-4">
+
+                        {evolutionPokemon.types.map(
+                          (pokemonType: string) => {
+
+                            const typeDesign =
+                              pokemonTypeDesign[pokemonType] ?? {
+                                icon: "●",
+                                className:
+                                  "bg-slate-100 border-slate-300 text-slate-700",
+                              };
+
+                            return (
+                              <span
+                                key={pokemonType}
+                                className={`flex items-center gap-1 border rounded-full px-3 py-1 text-sm font-bold ${typeDesign.className}`}
+                              >
+                                <span aria-hidden="true">
+                                  {typeDesign.icon}
+                                </span>
+
+                                <span>
+                                  {pokemonType}
+                                </span>
+                              </span>
+                            );
+                          }
+                        )}
+
+                      </div>
+
+                    </article>
+                  </Link>
+
+                </div>
+              );
+            }
+          )}
+
+        </div>
+
+      </section>
 
     </main>
   );
