@@ -1,7 +1,39 @@
 import { NextResponse } from "next/server";
 
+// 検索で選択できる地方
+type RegionKey =
+  | "all"
+  | "kanto"
+  | "johto"
+  | "hoenn"
+  | "sinnoh"
+  | "unova"
+  | "kalos"
+  | "alola"
+  | "galar"
+  | "hisui"
+  | "paldea";
+
 interface SearchRequest {
   keyword?: string;
+  region?: string;
+}
+
+interface NamedApiResource {
+  name: string;
+  url: string;
+}
+
+interface RegionResponse {
+  pokedexes: NamedApiResource[];
+}
+
+interface PokedexEntry {
+  pokemon_species: NamedApiResource;
+}
+
+interface PokedexResponse {
+  pokemon_entries: PokedexEntry[];
 }
 
 interface PokemonSpeciesName {
@@ -24,16 +56,152 @@ interface GraphQLResponse {
   }[];
 }
 
-// ポケモンを日本語名で検索
+// この図鑑で扱う全国図鑑番号の最大値
+const totalPokemonCount = 1025;
+
+// 選択可能な地方
+const regionKeys: RegionKey[] = [
+  "all",
+  "kanto",
+  "johto",
+  "hoenn",
+  "sinnoh",
+  "unova",
+  "kalos",
+  "alola",
+  "galar",
+  "hisui",
+  "paldea",
+];
+
+// 受け取った文字が正しい地方の値か確認する
+const isRegionKey = (
+  region: string
+): region is RegionKey => {
+  return regionKeys.includes(region as RegionKey);
+};
+
+// APIのURLからポケモンの図鑑番号を取得する
+const getPokemonSpeciesId = (
+  pokemonSpeciesUrl: string
+) => {
+  const urlParts = pokemonSpeciesUrl
+    .split("/")
+    .filter(Boolean);
+
+  return Number(urlParts[urlParts.length - 1]);
+};
+
+// 選択した地方の地方図鑑に登録されているポケモン番号を取得する
+const getRegionPokemonSpeciesIds = async (
+  region: RegionKey
+) => {
+  // 「すべての地方」の場合は全国図鑑1番から1025番を対象にする
+  if (region === "all") {
+    return Array.from(
+      {
+        length: totalPokemonCount,
+      },
+      (_, index) => {
+        return index + 1;
+      }
+    );
+  }
+
+  // 選択された地方のデータを取得する
+  const regionResponse = await fetch(
+    `https://pokeapi.co/api/v2/region/${region}`,
+    {
+      next: {
+        revalidate: 86400,
+      },
+    }
+  );
+
+  if (!regionResponse.ok) {
+    throw new Error(
+      `地方データの取得に失敗しました。status: ${regionResponse.status}`
+    );
+  }
+
+  const regionData: RegionResponse =
+    await regionResponse.json();
+
+  // その地方に関連するすべての地方図鑑を取得する
+  const pokedexResponses = regionData.pokedexes.map(
+    async (pokedex) => {
+      const pokedexResponse = await fetch(
+        pokedex.url,
+        {
+          next: {
+            revalidate: 86400,
+          },
+        }
+      );
+
+      if (!pokedexResponse.ok) {
+        throw new Error(
+          `地方図鑑の取得に失敗しました。status: ${pokedexResponse.status}`
+        );
+      }
+
+      return (await pokedexResponse.json()) as PokedexResponse;
+    }
+  );
+
+  const pokedexResults = await Promise.all(
+    pokedexResponses
+  );
+
+  // 各地方図鑑に登録されているポケモン番号を取り出す
+  const pokemonSpeciesIds = pokedexResults.flatMap(
+    (pokedexData) => {
+      return pokedexData.pokemon_entries.map(
+        (pokedexEntry) => {
+          return getPokemonSpeciesId(
+            pokedexEntry.pokemon_species.url
+          );
+        }
+      );
+    }
+  );
+
+  // 同じポケモンが複数の地方図鑑にいても重複しないようにする
+  // このアプリで扱う1025番までに限定する
+  const uniquePokemonSpeciesIds = [
+    ...new Set(pokemonSpeciesIds),
+  ]
+    .filter((pokemonSpeciesId) => {
+      return (
+        pokemonSpeciesId >= 1 &&
+        pokemonSpeciesId <= totalPokemonCount
+      );
+    })
+    .sort((firstId, secondId) => {
+      return firstId - secondId;
+    });
+
+  return uniquePokemonSpeciesIds;
+};
+
+// ポケモンを日本語名と地方図鑑で検索する
 export async function POST(request: Request) {
   try {
-    const requestBody: SearchRequest = await request.json();
+    const requestBody: SearchRequest =
+      await request.json();
+
+    // 入力されたポケモン名
     const keyword = requestBody.keyword?.trim();
+
+    // 画面から送られてきた地方
+    const requestedRegion =
+      requestBody.region ?? "all";
 
     if (!keyword) {
       return NextResponse.json(
         {
-          message: "ポケモン名を入力してください。",
+          message:
+            "ポケモン名を入力してください。",
         },
         {
           status: 400,
@@ -41,19 +209,56 @@ export async function POST(request: Request) {
       );
     }
 
-    // 日本語名を部分一致で検索
+    // 不正な地方が送られた場合は「すべての地方」にする
+    const selectedRegion: RegionKey =
+      isRegionKey(requestedRegion)
+        ? requestedRegion
+        : "all";
+
+    // 選択した地方図鑑に登録されているポケモン番号を取得
+    const pokemonSpeciesIds =
+      await getRegionPokemonSpeciesIds(
+        selectedRegion
+      );
+
+    // 地方図鑑に登録されているポケモンがいない場合
+    if (pokemonSpeciesIds.length === 0) {
+      return NextResponse.json({
+        results: [],
+        count: 0,
+      });
+    }
+
+    // 開発時、中身確認用
+    // console.log("検索する名前は", keyword);
+    // console.log("選択された地方は", selectedRegion);
+    // console.log(
+    //   "地方図鑑に登録されている番号は",
+    //   pokemonSpeciesIds
+    // );
+
+    // 日本語名の部分一致と地方図鑑の登録番号で検索
     const graphQLQuery = `
-      query SearchPokemon($keyword: String!) {
+      query SearchPokemon(
+        $keyword: String!
+        $pokemonSpeciesIds: [Int!]!
+      ) {
         pokemonspeciesname(
           where: {
-            name: { _ilike: $keyword }
-            language_id: { _eq: 1 }
-            pokemon_species_id: { _lte: 1025 }
+            name: {
+              _ilike: $keyword
+            }
+            language_id: {
+              _eq: 1
+            }
+            pokemon_species_id: {
+              _in: $pokemonSpeciesIds
+            }
           }
           order_by: {
             pokemon_species_id: asc
           }
-          limit: 20
+          limit: 1025
         ) {
           name
           pokemon_species_id
@@ -72,6 +277,7 @@ export async function POST(request: Request) {
           query: graphQLQuery,
           variables: {
             keyword: `%${keyword}%`,
+            pokemonSpeciesIds,
           },
         }),
 
@@ -120,6 +326,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       results,
+
+      // 検索結果の件数
+      count: results.length,
     });
   } catch (error) {
     console.error("検索APIエラー", error);
