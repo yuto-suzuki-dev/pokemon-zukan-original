@@ -55,6 +55,17 @@ interface PokemonAbilityData {
   ability: NamedApiResource;
 }
 
+// ポケモンが登録されている図鑑のデータ型
+interface PokemonPokedexNumberData {
+  entry_number: number;
+  pokedex: NamedApiResource;
+}
+
+// 図鑑の詳細データ型
+interface PokedexData {
+  region: NamedApiResource | null;
+}
+
 // 進化情報のデータ型
 interface EvolutionChainData {
   species: NamedApiResource;
@@ -69,6 +80,34 @@ interface EvolutionPokemonData {
   types: string[];
 }
 
+// 地方名を日本語へ変換する
+const regionJapaneseNames: Record<string, string> = {
+  kanto: "カントー地方",
+  johto: "ジョウト地方",
+  hoenn: "ホウエン地方",
+  sinnoh: "シンオウ地方",
+  unova: "イッシュ地方",
+  kalos: "カロス地方",
+  alola: "アローラ地方",
+  galar: "ガラル地方",
+  hisui: "ヒスイ地方",
+  paldea: "パルデア地方",
+};
+
+// 地方の表示順
+const regionDisplayOrder: Record<string, number> = {
+  kanto: 1,
+  johto: 2,
+  hoenn: 3,
+  sinnoh: 4,
+  unova: 5,
+  kalos: 6,
+  alola: 7,
+  galar: 8,
+  hisui: 9,
+  paldea: 10,
+};
+
 // タイプごとのアイコンと色
 const pokemonTypeDesign: {
   [key: string]: {
@@ -78,75 +117,93 @@ const pokemonTypeDesign: {
 } = {
   ノーマル: {
     icon: "○",
-    className: "bg-stone-100 border-stone-300 text-stone-700",
+    className:
+      "bg-stone-100 border-stone-300 text-stone-700",
   },
   ほのお: {
     icon: "🔥",
-    className: "bg-orange-100 border-orange-300 text-orange-700",
+    className:
+      "bg-orange-100 border-orange-300 text-orange-700",
   },
   みず: {
     icon: "💧",
-    className: "bg-blue-100 border-blue-300 text-blue-700",
+    className:
+      "bg-blue-100 border-blue-300 text-blue-700",
   },
   でんき: {
     icon: "⚡",
-    className: "bg-yellow-100 border-yellow-300 text-yellow-700",
+    className:
+      "bg-yellow-100 border-yellow-300 text-yellow-700",
   },
   くさ: {
     icon: "🌿",
-    className: "bg-green-100 border-green-300 text-green-700",
+    className:
+      "bg-green-100 border-green-300 text-green-700",
   },
   こおり: {
     icon: "❄️",
-    className: "bg-cyan-100 border-cyan-300 text-cyan-700",
+    className:
+      "bg-cyan-100 border-cyan-300 text-cyan-700",
   },
   かくとう: {
     icon: "✊",
-    className: "bg-red-100 border-red-300 text-red-700",
+    className:
+      "bg-red-100 border-red-300 text-red-700",
   },
   どく: {
     icon: "☠️",
-    className: "bg-purple-100 border-purple-300 text-purple-700",
+    className:
+      "bg-purple-100 border-purple-300 text-purple-700",
   },
   じめん: {
     icon: "⛰️",
-    className: "bg-amber-100 border-amber-300 text-amber-700",
+    className:
+      "bg-amber-100 border-amber-300 text-amber-700",
   },
   ひこう: {
     icon: "🪽",
-    className: "bg-sky-100 border-sky-300 text-sky-700",
+    className:
+      "bg-sky-100 border-sky-300 text-sky-700",
   },
   エスパー: {
     icon: "🔮",
-    className: "bg-pink-100 border-pink-300 text-pink-700",
+    className:
+      "bg-pink-100 border-pink-300 text-pink-700",
   },
   むし: {
     icon: "🐛",
-    className: "bg-lime-100 border-lime-300 text-lime-700",
+    className:
+      "bg-lime-100 border-lime-300 text-lime-700",
   },
   いわ: {
     icon: "🪨",
-    className: "bg-yellow-100 border-yellow-400 text-yellow-800",
+    className:
+      "bg-yellow-100 border-yellow-400 text-yellow-800",
   },
   ゴースト: {
     icon: "👻",
-    className: "bg-indigo-100 border-indigo-300 text-indigo-700",
+    className:
+      "bg-indigo-100 border-indigo-300 text-indigo-700",
   },
   ドラゴン: {
     icon: "🐉",
-    className: "bg-violet-100 border-violet-300 text-violet-700",
+    className:
+      "bg-violet-100 border-violet-300 text-violet-700",
   },
   あく: {
     icon: "🌑",
-    className: "bg-gray-200 border-gray-400 text-gray-800",
+    className:
+      "bg-gray-200 border-gray-400 text-gray-800",
   },
   はがね: {
     icon: "⚙️",
-    className: "bg-slate-100 border-slate-300 text-slate-700",
+    className:
+      "bg-slate-100 border-slate-300 text-slate-700",
   },
   フェアリー: {
     icon: "✨",
-    className: "bg-rose-100 border-rose-300 text-rose-700",
+    className:
+      "bg-rose-100 border-rose-300 text-rose-700",
   },
 };
 
@@ -219,9 +276,7 @@ export default async function PokemonDetailPage({
       const pokemonJaTypeName =
         pokemonTypeResult.names.find(
           (typeNameData: PokemonNameData) => {
-            return (
-              typeNameData.language.name === "ja"
-            );
+            return typeNameData.language.name === "ja";
           }
         );
 
@@ -229,9 +284,7 @@ export default async function PokemonDetailPage({
       const pokemonEnTypeName =
         pokemonTypeResult.names.find(
           (typeNameData: PokemonNameData) => {
-            return (
-              typeNameData.language.name === "en"
-            );
+            return typeNameData.language.name === "en";
           }
         );
 
@@ -243,9 +296,6 @@ export default async function PokemonDetailPage({
     }
   );
 
-  // 開発時、中身確認用
-  // console.log("ポケモンのタイプは", pokemonJaTypes);
-
   // ###########################################################
   // ポケモンのステータスを取得
   // ###########################################################
@@ -253,9 +303,7 @@ export default async function PokemonDetailPage({
   const getPokemonStat = (statName: string) => {
     const pokemonStat = pokemonDetail.stats.find(
       (pokemonStatData: PokemonStatData) => {
-        return (
-          pokemonStatData.stat.name === statName
-        );
+        return pokemonStatData.stat.name === statName;
       }
     );
 
@@ -309,8 +357,7 @@ export default async function PokemonDetailPage({
           pokemonAbilityResult.names.find(
             (abilityNameData: PokemonNameData) => {
               return (
-                abilityNameData.language.name ===
-                "ja"
+                abilityNameData.language.name === "ja"
               );
             }
           );
@@ -320,8 +367,7 @@ export default async function PokemonDetailPage({
           pokemonAbilityResult.names.find(
             (abilityNameData: PokemonNameData) => {
               return (
-                abilityNameData.language.name ===
-                "en"
+                abilityNameData.language.name === "en"
               );
             }
           );
@@ -329,17 +375,13 @@ export default async function PokemonDetailPage({
         return (
           pokemonJaAbilityName?.name ??
           pokemonEnAbilityName?.name ??
-          pokemonDetail.abilities[index].ability
-            .name
+          pokemonDetail.abilities[index].ability.name
         );
       }
     );
 
   const pokemonAbilitiesText =
     pokemonJaAbilities.join("・");
-
-  // 開発時、中身確認用
-  // console.log("ポケモンの特性は", pokemonJaAbilities);
 
   // ###########################################################
   // speciesから日本語名・分類・説明文などを取得
@@ -352,9 +394,6 @@ export default async function PokemonDetailPage({
   const pokemonSpeciesData =
     await pokemonSpeciesResponse.json();
 
-  // 開発時、中身確認用
-  // console.log("speciesデータは", pokemonSpeciesData);
-
   // ###########################################################
   // ポケモンの日本語名を取得
   // ###########################################################
@@ -362,18 +401,14 @@ export default async function PokemonDetailPage({
   const pokemonJaNameData =
     pokemonSpeciesData.names?.find(
       (pokemonNameData: PokemonNameData) => {
-        return (
-          pokemonNameData.language.name === "ja"
-        );
+        return pokemonNameData.language.name === "ja";
       }
     );
 
   const pokemonEnNameData =
     pokemonSpeciesData.names?.find(
       (pokemonNameData: PokemonNameData) => {
-        return (
-          pokemonNameData.language.name === "en"
-        );
+        return pokemonNameData.language.name === "en";
       }
     );
 
@@ -386,39 +421,24 @@ export default async function PokemonDetailPage({
   // ポケモンの分類を取得
   // ###########################################################
 
-  // 日本語の分類を探す
   const pokemonJaCategoryData =
     pokemonSpeciesData.genera?.find(
-      (
-        categoryData: PokemonCategoryData
-      ) => {
-        return (
-          categoryData.language.name === "ja"
-        );
+      (categoryData: PokemonCategoryData) => {
+        return categoryData.language.name === "ja";
       }
     );
 
-  // 日本語の分類がない場合に使用する英語の分類
   const pokemonEnCategoryData =
     pokemonSpeciesData.genera?.find(
-      (
-        categoryData: PokemonCategoryData
-      ) => {
-        return (
-          categoryData.language.name === "en"
-        );
+      (categoryData: PokemonCategoryData) => {
+        return categoryData.language.name === "en";
       }
     );
 
-  // 日本語も英語もない場合は「分類未取得」と表示する
-  // ?.genusにすることで、データがなくてもエラーにならない
   const pokemonCategory =
     pokemonJaCategoryData?.genus ??
     pokemonEnCategoryData?.genus ??
     "分類未取得";
-
-  // 開発時、中身確認用
-  // console.log("ポケモンの分類は", pokemonCategory);
 
   // ###########################################################
   // ポケモンの説明文を日本語で取得
@@ -429,9 +449,7 @@ export default async function PokemonDetailPage({
       (
         flavorTextData: PokemonFlavorTextData
       ) => {
-        return (
-          flavorTextData.language.name === "ja"
-        );
+        return flavorTextData.language.name === "ja";
       }
     );
 
@@ -439,10 +457,78 @@ export default async function PokemonDetailPage({
     pokemonDescriptionData?.flavor_text
       ?.replace(/\n/g, " ")
       .replace(/\f/g, " ") ??
-    "日本語の説明文は未取得です。";
+    "日本語の説明文がないため未実装";
 
-  // 開発時、中身確認用
-  // console.log("ポケモンの説明文は", pokemonDescription);
+  // ###########################################################
+  // ポケモンが登録されている地方図鑑を取得
+  // ###########################################################
+
+  // 全国図鑑以外の図鑑を取り出す
+  const regionalPokedexNumbers: PokemonPokedexNumberData[] =
+    (
+      pokemonSpeciesData.pokedex_numbers ?? []
+    ).filter(
+      (
+        pokedexNumberData: PokemonPokedexNumberData
+      ) => {
+        return (
+          pokedexNumberData.pokedex.name !== "national"
+        );
+      }
+    );
+
+  // 各図鑑の詳細データを取得する
+  const regionalPokedexResponses =
+    regionalPokedexNumbers.map(
+      async (
+        pokedexNumberData: PokemonPokedexNumberData
+      ): Promise<PokedexData | null> => {
+        const pokedexResponse = await fetch(
+          pokedexNumberData.pokedex.url
+        );
+
+        // 1件の取得に失敗しても詳細画面全体は止めない
+        if (!pokedexResponse.ok) {
+          return null;
+        }
+
+        return await pokedexResponse.json();
+      }
+    );
+
+  const regionalPokedexResults = await Promise.all(
+    regionalPokedexResponses
+  );
+
+  // 図鑑データから地方名を取り出す
+  const regionNames = regionalPokedexResults
+    .map((pokedexData) => {
+      return pokedexData?.region?.name ?? null;
+    })
+    .filter(
+      (regionName): regionName is string => {
+        return regionName !== null;
+      }
+    );
+
+  // 同じ地方に複数の図鑑があっても重複表示しない
+  const uniqueRegionNames = [
+    ...new Set(regionNames),
+  ].sort((firstRegion, secondRegion) => {
+    return (
+      (regionDisplayOrder[firstRegion] ?? 999) -
+      (regionDisplayOrder[secondRegion] ?? 999)
+    );
+  });
+
+  // 地方名を日本語へ変換する
+  const regionalPokedexNames =
+    uniqueRegionNames.map((regionName) => {
+      return (
+        regionJapaneseNames[regionName] ??
+        regionName
+      );
+    });
 
   // ###########################################################
   // 前後のポケモンを取得
@@ -471,24 +557,18 @@ export default async function PokemonDetailPage({
 
     const previousPokemonNameData =
       previousPokemonData.names?.find(
-        (
-          pokemonNameData: PokemonNameData
-        ) => {
+        (pokemonNameData: PokemonNameData) => {
           return (
-            pokemonNameData.language.name ===
-            "ja"
+            pokemonNameData.language.name === "ja"
           );
         }
       );
 
     const previousPokemonEnNameData =
       previousPokemonData.names?.find(
-        (
-          pokemonNameData: PokemonNameData
-        ) => {
+        (pokemonNameData: PokemonNameData) => {
           return (
-            pokemonNameData.language.name ===
-            "en"
+            pokemonNameData.language.name === "en"
           );
         }
       );
@@ -512,24 +592,18 @@ export default async function PokemonDetailPage({
 
     const nextPokemonNameData =
       nextPokemonData.names?.find(
-        (
-          pokemonNameData: PokemonNameData
-        ) => {
+        (pokemonNameData: PokemonNameData) => {
           return (
-            pokemonNameData.language.name ===
-            "ja"
+            pokemonNameData.language.name === "ja"
           );
         }
       );
 
     const nextPokemonEnNameData =
       nextPokemonData.names?.find(
-        (
-          pokemonNameData: PokemonNameData
-        ) => {
+        (pokemonNameData: PokemonNameData) => {
           return (
-            pokemonNameData.language.name ===
-            "en"
+            pokemonNameData.language.name === "en"
           );
         }
       );
@@ -547,6 +621,25 @@ export default async function PokemonDetailPage({
   const evolutionPokemonList: NamedApiResource[] =
     [];
 
+  // 分岐する進化先をすべて配列へ追加する
+  const collectEvolutionPokemon = (
+    evolutionData: EvolutionChainData
+  ) => {
+    // 現在のポケモンを配列へ追加
+    evolutionPokemonList.push(
+      evolutionData.species
+    );
+
+    // 進化先をすべて順番に確認する
+    evolutionData.evolves_to.forEach(
+      (nextEvolutionData) => {
+        collectEvolutionPokemon(
+          nextEvolutionData
+        );
+      }
+    );
+  };
+
   if (pokemonSpeciesData.evolution_chain?.url) {
     const evolutionChainResponse = await fetch(
       pokemonSpeciesData.evolution_chain.url
@@ -555,24 +648,17 @@ export default async function PokemonDetailPage({
     const evolutionChainData =
       await evolutionChainResponse.json();
 
-    // 進化前から順番に配列へ入れる
-    let currentEvolutionData:
-      | EvolutionChainData
-      | undefined = evolutionChainData.chain;
-
-    while (currentEvolutionData) {
-      evolutionPokemonList.push(
-        currentEvolutionData.species
-      );
-
-      // 進化先が複数ある場合は最初の進化先を表示する
-      currentEvolutionData =
-        currentEvolutionData.evolves_to?.[0];
-    }
+    // 進化前から分岐先まですべて取得する
+    collectEvolutionPokemon(
+      evolutionChainData.chain
+    );
   }
 
   // 開発時、中身確認用
-  // console.log("進化するポケモンは", evolutionPokemonList);
+  // console.log(
+  //   "進化するポケモンは",
+  //   evolutionPokemonList
+  // );
 
   const evolutionPokemonResponses =
     evolutionPokemonList.map(
@@ -730,7 +816,7 @@ export default async function PokemonDetailPage({
     <main className="min-h-screen bg-slate-50 px-4 py-4">
 
       {/* 戻る・前後のポケモン・現在のポケモン */}
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-3 items-start mb-8">
+      <div className="mx-auto mb-8 grid w-full max-w-7xl grid-cols-3 items-start">
 
         {/* 左側 */}
         <div className="flex items-start gap-10">
@@ -753,7 +839,7 @@ export default async function PokemonDetailPage({
                 ← {previousPokemonJaName}
               </p>
 
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="mt-1 text-sm text-slate-500">
                 #
                 {String(
                   previousPokemonNumber
@@ -770,7 +856,7 @@ export default async function PokemonDetailPage({
             {pokemonJaName}
           </h1>
 
-          <p className="text-slate-500 mt-1">
+          <p className="mt-1 text-slate-500">
             #
             {String(pokemonNumber).padStart(
               4,
@@ -790,7 +876,7 @@ export default async function PokemonDetailPage({
                 {nextPokemonJaName} →
               </p>
 
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="mt-1 text-sm text-slate-500">
                 #
                 {String(
                   nextPokemonNumber
@@ -803,18 +889,18 @@ export default async function PokemonDetailPage({
       </div>
 
       {/* ポケモンの詳細情報全体 */}
-      <div className="w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[360px_1fr] gap-6">
+      <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-[360px_1fr]">
 
         {/* 左側：画像とステータス */}
-        <div className="border border-slate-200 rounded-xl bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
 
           {/* ポケモンの画像 */}
-          <div className="h-72 flex justify-center items-center mb-5 rounded-lg">
+          <div className="mb-5 flex h-72 items-center justify-center rounded-lg">
             {pokemonImage ? (
               <img
                 src={pokemonImage}
                 alt={pokemonJaName}
-                className="max-w-full max-h-full object-contain"
+                className="max-h-full max-w-full object-contain"
               />
             ) : (
               <p className="text-slate-400">
@@ -824,7 +910,7 @@ export default async function PokemonDetailPage({
           </div>
 
           {/* ポケモンのステータス */}
-          <div className="grid grid-cols-6 gap-1 border border-slate-200 rounded-lg bg-slate-50 px-2 py-3">
+          <div className="grid grid-cols-6 gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-3">
 
             {/* HP */}
             <div className="text-center">
@@ -832,7 +918,7 @@ export default async function PokemonDetailPage({
                 HP
               </p>
 
-              <p className="font-bold mt-2">
+              <p className="mt-2 font-bold">
                 {pokemonHp}
               </p>
             </div>
@@ -843,7 +929,7 @@ export default async function PokemonDetailPage({
                 こうげき
               </p>
 
-              <p className="font-bold mt-2">
+              <p className="mt-2 font-bold">
                 {pokemonAttack}
               </p>
             </div>
@@ -854,7 +940,7 @@ export default async function PokemonDetailPage({
                 ぼうぎょ
               </p>
 
-              <p className="font-bold mt-2">
+              <p className="mt-2 font-bold">
                 {pokemonDefense}
               </p>
             </div>
@@ -865,7 +951,7 @@ export default async function PokemonDetailPage({
                 とくこう
               </p>
 
-              <p className="font-bold mt-2">
+              <p className="mt-2 font-bold">
                 {pokemonSpecialAttack}
               </p>
             </div>
@@ -876,7 +962,7 @@ export default async function PokemonDetailPage({
                 とくぼう
               </p>
 
-              <p className="font-bold mt-2">
+              <p className="mt-2 font-bold">
                 {pokemonSpecialDefense}
               </p>
             </div>
@@ -887,7 +973,7 @@ export default async function PokemonDetailPage({
                 すばやさ
               </p>
 
-              <p className="font-bold mt-2">
+              <p className="mt-2 font-bold">
                 {pokemonSpeed}
               </p>
             </div>
@@ -895,100 +981,135 @@ export default async function PokemonDetailPage({
           </div>
         </div>
 
-        {/* 右側：基本情報・タイプ・説明 */}
-        <div className="border border-slate-200 rounded-xl bg-white p-6 shadow-sm">
+        {/* 右側：基本情報・タイプ・地方・説明 */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
           {/* 高さ・重さ・分類・特性 */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
 
             {/* 高さ */}
-            <div className="min-h-32 rounded-lg border border-sky-200 bg-sky-50 p-4 text-center flex flex-col justify-center">
-              <p className="font-bold text-sky-700">
+            <div className="flex min-h-32 flex-col justify-center rounded-lg border border-sky-100 bg-sky-50 p-4 text-center">
+              <p className="font-bold text-slate-700">
                 高さ
               </p>
 
-              <p className="font-bold mt-3">
+              <p className="mt-3 font-bold">
                 {pokemonHeight}m
               </p>
             </div>
 
             {/* 重さ */}
-            <div className="min-h-32 rounded-lg border border-orange-200 bg-orange-50 p-4 text-center flex flex-col justify-center">
-              <p className="font-bold text-orange-700">
+            <div className="flex min-h-32 flex-col justify-center rounded-lg border border-sky-100 bg-sky-50 p-4 text-center">
+              <p className="font-bold text-slate-700">
                 重さ
               </p>
 
-              <p className="font-bold mt-3">
+              <p className="mt-3 font-bold">
                 {pokemonWeight}kg
               </p>
             </div>
 
             {/* 分類 */}
-            <div className="min-h-32 rounded-lg border border-green-200 bg-green-50 p-4 text-center flex flex-col justify-center">
-              <p className="font-bold text-green-700">
+            <div className="flex min-h-32 flex-col justify-center rounded-lg border border-sky-100 bg-sky-50 p-4 text-center">
+              <p className="font-bold text-slate-700">
                 分類
               </p>
 
-              <p className="font-bold mt-3 break-words">
+              <p className="mt-3 wrap-break-words font-bold">
                 {pokemonCategory}
               </p>
             </div>
 
             {/* 特性 */}
-            <div className="min-h-32 rounded-lg border border-purple-200 bg-purple-50 p-4 text-center flex flex-col justify-center">
-              <p className="font-bold text-purple-700">
+            <div className="flex min-h-32 flex-col justify-center rounded-lg border border-sky-100 bg-sky-50 p-4 text-center">
+              <p className="font-bold text-slate-700">
                 特性
               </p>
 
-              <p className="font-bold mt-3 break-words">
+              <p className="mt-3 wrap-break-words font-bold">
                 {pokemonAbilitiesText}
               </p>
             </div>
 
           </div>
 
-          {/* ポケモンのタイプ */}
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">
-              タイプ
-            </h2>
+          {/* タイプと地方 */}
+          <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
 
-            <div className="flex flex-wrap gap-3">
-              {pokemonJaTypes.map(
-                (pokemonType: string) => {
-                  const typeDesign =
-                    pokemonTypeDesign[
-                      pokemonType
-                    ] ?? {
-                      icon: "●",
-                      className:
-                        "bg-slate-100 border-slate-300 text-slate-700",
-                    };
+            {/* ポケモンのタイプ */}
+            <section>
+              <h2 className="mb-4 text-xl font-bold text-slate-800">
+                タイプ
+              </h2>
 
-                  return (
-                    <span
-                      key={pokemonType}
-                      className={`flex items-center gap-2 rounded-full border px-6 py-3 font-bold ${typeDesign.className}`}
-                    >
-                      <span aria-hidden="true">
-                        {typeDesign.icon}
+              <div className="flex flex-wrap gap-3">
+                {pokemonJaTypes.map(
+                  (pokemonType: string) => {
+                    const typeDesign =
+                      pokemonTypeDesign[
+                        pokemonType
+                      ] ?? {
+                        icon: "●",
+                        className:
+                          "bg-slate-100 border-slate-300 text-slate-700",
+                      };
+
+                    return (
+                      <span
+                        key={pokemonType}
+                        className={`flex items-center gap-2 rounded-full border px-6 py-3 font-bold ${typeDesign.className}`}
+                      >
+                        <span aria-hidden="true">
+                          {typeDesign.icon}
+                        </span>
+
+                        <span>
+                          {pokemonType}
+                        </span>
                       </span>
+                    );
+                  }
+                )}
+              </div>
+            </section>
 
-                      <span>{pokemonType}</span>
-                    </span>
-                  );
-                }
+            {/* ポケモンが登録されている地方 */}
+            <section>
+              <h2 className="mb-4 text-xl font-bold text-slate-800">
+                地方
+              </h2>
+
+              {regionalPokedexNames.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {regionalPokedexNames.map(
+                    (regionName) => {
+                      return (
+                        <span
+                          key={regionName}
+                          className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700"
+                        >
+                          {regionName}
+                        </span>
+                      );
+                    }
+                  )}
+                </div>
+              ) : (
+                <p className="text-slate-500">
+                  登録情報なし
+                </p>
               )}
-            </div>
-          </section>
+            </section>
+
+          </div>
 
           {/* ポケモンの説明 */}
           <section>
-            <h2 className="text-xl font-bold text-slate-800 mb-4">
+            <h2 className="mb-4 text-xl font-bold text-slate-800">
               ポケモンの説明
             </h2>
 
-            <div className="min-h-31 rounded-lg border border-slate-200 bg-slate-50 px-6 py-6 flex items-center">
+            <div className="flex min-h-31 items-center rounded-lg border border-slate-200 bg-slate-50 px-6 py-6">
               <p className="leading-8">
                 {pokemonDescription}
               </p>
@@ -1000,104 +1121,90 @@ export default async function PokemonDetailPage({
 
       {/* 進化情報 */}
       {evolutionPokemonResults.length > 0 && (
-        <section className="w-full max-w-5xl mx-auto mt-10 mb-10">
+        <section className="mx-auto mt-10 mb-10 w-full max-w-5xl">
 
-          <h2 className="text-2xl font-bold text-slate-800 text-center mb-6">
+          <h2 className="mb-6 text-center text-2xl font-bold text-slate-800">
             進化
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
             {evolutionPokemonResults.map(
-              (
-                evolutionPokemon,
-                evolutionIndex
-              ) => {
+              (evolutionPokemon) => {
                 return (
-                  <div
+                  <Link
                     key={evolutionPokemon.id}
-                    className="flex items-center gap-3"
+                    href={`/pokemon/${evolutionPokemon.id}`}
+                    className="w-full rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm hover:bg-slate-50 hover:shadow-md"
                   >
-                    {/* 2匹目以降に矢印を表示 */}
-                    {evolutionIndex > 0 && (
-                      <div className="hidden md:block text-2xl text-slate-400">
-                        →
-                      </div>
-                    )}
+                    {/* 進化するポケモンの画像 */}
+                    <div className="mb-3 flex h-40 items-center justify-center">
+                      {evolutionPokemon.image ? (
+                        <img
+                          src={
+                            evolutionPokemon.image
+                          }
+                          alt={
+                            evolutionPokemon.name
+                          }
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      ) : (
+                        <p className="text-sm text-slate-400">
+                          画像未取得
+                        </p>
+                      )}
+                    </div>
 
-                    <Link
-                      href={`/pokemon/${evolutionPokemon.id}`}
-                      className="w-full rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm hover:bg-slate-50 hover:shadow-md"
-                    >
-                      {/* 進化するポケモンの画像 */}
-                      <div className="h-40 flex items-center justify-center mb-3">
-                        {evolutionPokemon.image ? (
-                          <img
-                            src={
-                              evolutionPokemon.image
-                            }
-                            alt={
-                              evolutionPokemon.name
-                            }
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        ) : (
-                          <p className="text-sm text-slate-400">
-                            画像未取得
-                          </p>
-                        )}
-                      </div>
+                    {/* 図鑑番号 */}
+                    <p className="text-sm text-slate-500">
+                      #
+                      {String(
+                        evolutionPokemon.id
+                      ).padStart(4, "0")}
+                    </p>
 
-                      {/* 図鑑番号 */}
-                      <p className="text-sm text-slate-500">
-                        #
-                        {String(
-                          evolutionPokemon.id
-                        ).padStart(4, "0")}
-                      </p>
+                    {/* 日本語名 */}
+                    <p className="mt-1 text-lg font-bold">
+                      {evolutionPokemon.name}
+                    </p>
 
-                      {/* 日本語名 */}
-                      <p className="font-bold text-lg mt-1">
-                        {evolutionPokemon.name}
-                      </p>
+                    {/* タイプ */}
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
+                      {evolutionPokemon.types.map(
+                        (
+                          evolutionPokemonType
+                        ) => {
+                          const typeDesign =
+                            pokemonTypeDesign[
+                              evolutionPokemonType
+                            ] ?? {
+                              icon: "●",
+                              className:
+                                "bg-slate-100 border-slate-300 text-slate-700",
+                            };
 
-                      {/* タイプ */}
-                      <div className="flex flex-wrap justify-center gap-2 mt-3">
-                        {evolutionPokemon.types.map(
-                          (
-                            evolutionPokemonType
-                          ) => {
-                            const typeDesign =
-                              pokemonTypeDesign[
+                          return (
+                            <span
+                              key={
                                 evolutionPokemonType
-                              ] ?? {
-                                icon: "●",
-                                className:
-                                  "bg-slate-100 border-slate-300 text-slate-700",
-                              };
+                              }
+                              className={`flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-bold ${typeDesign.className}`}
+                            >
+                              <span aria-hidden="true">
+                                {typeDesign.icon}
+                              </span>
 
-                            return (
-                              <span
-                                key={
+                              <span>
+                                {
                                   evolutionPokemonType
                                 }
-                                className={`flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-bold ${typeDesign.className}`}
-                              >
-                                <span aria-hidden="true">
-                                  {typeDesign.icon}
-                                </span>
-
-                                <span>
-                                  {
-                                    evolutionPokemonType
-                                  }
-                                </span>
                               </span>
-                            );
-                          }
-                        )}
-                      </div>
-                    </Link>
-                  </div>
+                            </span>
+                          );
+                        }
+                      )}
+                    </div>
+                  </Link>
                 );
               }
             )}
